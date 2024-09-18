@@ -1,57 +1,46 @@
-package com.example.wanderly.ui.theme
+package com.example.landingpage.ui.theme
 
-import android.app.Activity
-import android.os.Build
+import android.hardware.lights.Light
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import com.example.wanderly.ui.theme.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+//Light Theme
+import com.example.wanderly.ui.theme.LT_MainColor
+import com.example.wanderly.ui.theme.LT_MainColorLighter
+import com.example.wanderly.ui.theme.LT_ButtonColor
+import com.example.wanderly.ui.theme.LT_BackgroundColor
+
+import com.example.wanderly.ui.theme.Pink40
+import com.example.wanderly.ui.theme.Purple40
+import com.example.wanderly.ui.theme.PurpleGrey40
+
+
+private val LightColorPalette = lightColorScheme(
+    primary = LT_MainColor,
+    primaryContainer = LT_ButtonColor,
+    secondary = LT_MainColorLighter,
+    background = LT_BackgroundColor,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+private val DarkColorPalette = LightColorPalette
 
 @Composable
-fun WanderlyTheme(
+fun LandingPageTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colors = if (darkTheme) {
+        DarkColorPalette
+    } else {
+        LightColorPalette
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colors,
         typography = Typography,
         content = content
     )
