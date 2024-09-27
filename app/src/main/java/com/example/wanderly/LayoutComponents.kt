@@ -47,10 +47,7 @@ fun Header() {
 }
 
 @Composable
-fun Navbar() {
-    var selectedItem by remember {
-        mutableIntStateOf(0)
-    }
+fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
     val items = listOf("Home", "Create", "Map", "Profile", "Settings")
 
     NavigationBar(
@@ -62,19 +59,23 @@ fun Navbar() {
                 icon = { Icon(painterResource(id = getIconResource(item)), contentDescription = item) },
                 label = { Text(item) },
                 selected = selectedItem == index,
-                onClick = { selectedItem = index }
+                onClick = { onItemSelected(index) }
             )
         }
     }
 }
 
 @Composable
-fun MainLayout(content: @Composable (PaddingValues) -> Unit) {
+fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
+    var selectedItem by remember { mutableIntStateOf(0) }
     Scaffold(
         topBar = { Header() },
-        bottomBar = { Navbar() }
+        bottomBar = { Navbar(
+            selectedItem = selectedItem,
+            onItemSelected = { index -> selectedItem = index }
+        ) }
     ) { innerPadding ->
-        content(innerPadding)
+        content(innerPadding, selectedItem)
     }
 }
 

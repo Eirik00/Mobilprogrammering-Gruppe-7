@@ -31,14 +31,14 @@ class MainActivity : ComponentActivity() {
             LandingPageTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    MainLayout { innerPadding ->
+                    MainLayout { innerPadding, selectedIndex ->
                         // Your page-specific content goes here
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(innerPadding)
                         ) {
-                            Text("Welcome to the Main Page!")
+                            Text("Current selected index: $selectedIndex")
                         }
                     }
                 }
@@ -52,14 +52,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     LandingPageTheme {
-        MainLayout { innerPadding ->
+        MainLayout { innerPadding, selectedIndex ->
             // Your page-specific content goes here
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Text("Welcome to the Main Page!")
+                Text("Current selected index: $selectedIndex")
             }
         }
     }
