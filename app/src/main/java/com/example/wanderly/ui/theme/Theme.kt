@@ -13,6 +13,7 @@ import com.example.wanderly.ui.theme.LT_MainColor
 import com.example.wanderly.ui.theme.LT_MainColorLighter
 import com.example.wanderly.ui.theme.LT_ButtonColor
 import com.example.wanderly.ui.theme.LT_BackgroundColor
+import com.example.wanderly.ui.theme.LT_TextColor
 
 import com.example.wanderly.ui.theme.Pink40
 import com.example.wanderly.ui.theme.Purple40
@@ -24,6 +25,11 @@ private val LightColorPalette = lightColorScheme(
     primaryContainer = LT_ButtonColor,
     secondary = LT_MainColorLighter,
     background = LT_BackgroundColor,
+    onPrimary = LT_TextColor,
+    onSecondary = LT_TextColor,
+    onBackground = LT_TextColor,
+    onSurface = LT_TextColor,
+    onPrimaryContainer = LT_TextColor
 )
 
 private val DarkColorPalette = LightColorPalette

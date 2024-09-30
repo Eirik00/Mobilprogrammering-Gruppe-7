@@ -37,8 +37,13 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .padding(innerPadding)
                         ) {
-                            Text("Current selected index: $selectedIndex")
-                            GoogleMapView(savedInstanceState = null)
+                            when (selectedIndex) {
+                                0 -> LandingPage(innerPadding)
+                                else -> {
+                                    Text("No page for the index: $selectedIndex")
+                                }
+                            }
+                            //GoogleMapView(savedInstanceState = null)
                         }
                     }
                 }
@@ -48,52 +53,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@Composable
-fun GoogleMapView(savedInstanceState: Bundle?) {
-    // Remember the MapView so it isn't recreated on recomposition
-    val mapView = rememberMapViewWithLifecycle()
 
-    AndroidView({ mapView }) { map ->
-        map.onCreate(savedInstanceState)
-        map.getMapAsync { googleMap ->
-            // Configure the Google Map
-            val initialPosition = LatLng(0.0, 0.0)
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initialPosition, 10f))
-            googleMap.addMarker(MarkerOptions().position(initialPosition).title("Marker"))
-        }
-    }
-}
-
-@Composable
-fun rememberMapViewWithLifecycle(): MapView {
-    val context = LocalContext.current
-    val mapView = remember {
-        MapView(context)
-    }
-
-    // Make the MapView follow the Compose lifecycle
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle, mapView) {
-        val callbacks = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_CREATE -> mapView.onCreate(Bundle())
-                Lifecycle.Event.ON_START -> mapView.onStart()
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                Lifecycle.Event.ON_STOP -> mapView.onStop()
-                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
-                else -> throw IllegalStateException()
-            }
-        }
-
-        lifecycle.addObserver(callbacks)
-        onDispose {
-            lifecycle.removeObserver(callbacks)
-        }
-    }
-
-    return mapView
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -105,7 +65,12 @@ fun DefaultPreview() {
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                Text("Current selected index: $selectedIndex")
+                when (selectedIndex) {
+                    0 -> LandingPage(innerPadding)
+                    else -> {
+                        Text("No page for the index: $selectedIndex")
+                    }
+                }
             }
         }
     }
