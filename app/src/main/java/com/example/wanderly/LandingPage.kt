@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
@@ -47,7 +48,8 @@ import com.example.compose.AppTheme
 fun LandingPage(paddingValues: PaddingValues){
     val scrollState = rememberScrollState()
     Column(
-        modifier = Modifier.verticalScroll(scrollState)
+        modifier = Modifier
+            .verticalScroll(scrollState)
     ){
         Column(
             modifier = Modifier
@@ -61,7 +63,7 @@ fun LandingPage(paddingValues: PaddingValues){
                     .fillMaxWidth(),
                 onClick = { Log.d("STATE","Create New Trip Clicked!") },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
                 ),
                 shape = RoundedCornerShape(10)
             ){
@@ -73,7 +75,7 @@ fun LandingPage(paddingValues: PaddingValues){
                     .fillMaxWidth(),
                 onClick = { Log.d("State", "Popular Trips Clicked!") },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
                 ),
                 shape = RoundedCornerShape(10)
             ){
@@ -85,7 +87,7 @@ fun LandingPage(paddingValues: PaddingValues){
             Box(
                 modifier = Modifier
                     .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.secondary)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ){
@@ -122,7 +124,7 @@ fun LandingPage(paddingValues: PaddingValues){
             Box(
                 modifier = Modifier
                     .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.secondary)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ){
@@ -191,7 +193,7 @@ fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean 
 }
 
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true, )
 @Composable
 fun LandingPagePreview() {
     AppTheme(highContrast = true) {

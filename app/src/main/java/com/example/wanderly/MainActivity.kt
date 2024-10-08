@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppTheme {
-                Surface(color = MaterialTheme.colorScheme.background) {
+                Surface(color = MaterialTheme.colorScheme.surface) {
                     MainLayout { innerPadding, selectedIndex ->
                         Box(
                             modifier = Modifier
