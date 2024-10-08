@@ -28,7 +28,9 @@ class MainActivity : ComponentActivity() {
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)  // Home screen
                                 1 -> CreateTripPage()           // Create trip page
-                                2 -> MapPage(innerPadding)                 // Map screen
+                                2 -> MapPage(innerPadding)      // Map screen
+                                3 -> ProfilePage()  // Profile Page
+                                4 -> SettingsPage() // Settings Page
 
                                 else -> Text("No page for index: $selectedIndex")
                             }
