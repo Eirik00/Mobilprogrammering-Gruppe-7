@@ -27,10 +27,7 @@ class MainActivity : ComponentActivity() {
                             // Handle screen navigation based on selected index
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)  // Home screen
-                                1 -> CreateTripScreen()          // "Create Trip" screen
-                                2 -> MapScreen()                 // Map screen
-                                3 -> ProfileScreen()             // Profile screen
-                                4 -> SettingsScreen()            // Settings screen
+                                2 -> MapPage(innerPadding)                 // Map screen
                                 else -> Text("No page for index: $selectedIndex")
                             }
                         }
@@ -38,54 +35,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-
-@Composable
-fun CreateTripScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = "Create a New Trip")
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Logikk for create trip her */ }) {
-            Text("Create Trip")
-        }
-    }
-}
-
-@Composable
-fun MapScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Map Screen")
-    }
-}
-
-@Composable
-fun ProfileScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Profile Screen")
-    }
-}
-
-@Composable
-fun SettingsScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Settings Screen")
     }
 }
 
