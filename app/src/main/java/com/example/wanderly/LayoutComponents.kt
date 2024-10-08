@@ -14,13 +14,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import android.util.Log
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.tooling.preview.Preview
 
 // Header Composable
 @Composable
 fun Header() {
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(4.dp)
             .fillMaxWidth(),
     ) {
@@ -28,7 +29,7 @@ fun Header() {
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "App Logo (Wanderly)",
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary)
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
             )
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -53,8 +54,9 @@ fun Header() {
 fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
     val items = listOf("Home", "Create", "Map", "Profile", "Settings")
 
+
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.primary
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(

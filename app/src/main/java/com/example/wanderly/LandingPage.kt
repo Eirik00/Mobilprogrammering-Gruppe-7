@@ -2,6 +2,7 @@ package com.example.wanderly
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,7 +30,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +64,7 @@ fun LandingPage(paddingValues: PaddingValues){
                 modifier = Modifier
                     .padding(16.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ){
@@ -83,11 +88,12 @@ fun LandingPage(paddingValues: PaddingValues){
                             .align(Alignment.CenterHorizontally),
                         onClick = { Log.d("State", "Popular Trips Clicked!") },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
+                            containerColor = MaterialTheme.colorScheme.secondary,
                         ),
                         shape = RoundedCornerShape(10)
                     ){
-                        Text("See More", fontSize = 20.sp)
+                        Text("See More", fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSecondary)
                     }
                 }
             }
@@ -98,7 +104,7 @@ fun LandingPage(paddingValues: PaddingValues){
                 modifier = Modifier
                     .padding(16.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ){
@@ -120,11 +126,12 @@ fun LandingPage(paddingValues: PaddingValues){
                             .align(Alignment.CenterHorizontally),
                         onClick = { Log.d("State", "Popular Trips Clicked!") },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = MaterialTheme.colorScheme.secondary,
                         ),
                         shape = RoundedCornerShape(10)
                     ){
-                        Text("See More", fontSize = 20.sp)
+                        Text("See More", fontSize = 20.sp,
+                            color = MaterialTheme.colorScheme.onSecondary)
                     }
                 }
             }
@@ -135,18 +142,28 @@ fun LandingPage(paddingValues: PaddingValues){
 
 @Composable
 fun PopularTripRow(tripName: String) {
+    var isFavorited by remember { mutableStateOf(false) }
+
     Row(modifier = Modifier
         .padding(5.dp)
         .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.tertiary)
+        .clip(RoundedCornerShape(10.dp))
+        .background(MaterialTheme.colorScheme.secondary)
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-        Text(tripName, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onTertiary)
+        Text(tripName, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSecondary)
+
+        val iconImageVector = if(isFavorited) {
+            Icons.Filled.Favorite
+        }else {
+            Icons.Filled.FavoriteBorder
+        }
         Icon(
-            imageVector = Icons.Filled.FavoriteBorder,
+            imageVector = iconImageVector,
             contentDescription = "Favourite Icon",
-            tint = Color.Black, // Må endres til theme farger
+            tint = MaterialTheme.colorScheme.onSecondary,
+            modifier = Modifier.clickable{isFavorited = !isFavorited}
         )//modifier = Modifier.align(Alignment.CenterVertically)
     }
 }
@@ -156,6 +173,7 @@ fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean 
     Row(modifier = Modifier
         .padding(5.dp)
         .fillMaxWidth()
+        .clip(RoundedCornerShape(10.dp))
         .background(if (startedBool) MaterialTheme.colorScheme.tertiary
             else MaterialTheme.colorScheme.secondary)
         .padding(10.dp),
