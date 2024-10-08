@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)
+                                2 -> MapPage(innerPadding)
                                 else -> {
                                     Text("No page for the index: $selectedIndex")
                                 }
@@ -67,6 +68,7 @@ fun DefaultPreview() {
             ) {
                 when (selectedIndex) {
                     0 -> LandingPage(innerPadding)
+                    2 -> MapPage(innerPadding)
                     else -> {
                         Text("No page for the index: $selectedIndex")
                     }
