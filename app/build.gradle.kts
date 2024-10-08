@@ -1,7 +1,14 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
+
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+localProperties.load(FileInputStream(localPropertiesFile))
 
 android {
     namespace = "com.example.wanderly"
@@ -14,10 +21,13 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        manifestPlaceholders["API_KEY"] = "\"${localProperties["apiKey"] ?: ""}\""
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
+
     }
 
     buildTypes {
@@ -38,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
