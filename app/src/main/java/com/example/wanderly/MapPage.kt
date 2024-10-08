@@ -25,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.landingpage.ui.theme.LandingPageTheme
+
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
@@ -37,6 +37,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.compose.AppTheme
 
 
 
@@ -95,7 +96,7 @@ fun rememberMapViewWithLifecycle(): MapView {
 @Preview(showBackground = true)
 @Composable
 fun MapPagePreview() {
-    LandingPageTheme {
+    AppTheme {
         MainLayout { innerPadding, selectedItem ->
             MapPage(innerPadding)
         }

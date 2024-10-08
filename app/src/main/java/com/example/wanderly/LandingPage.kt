@@ -23,7 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.landingpage.ui.theme.LandingPageTheme
+import com.example.compose.AppTheme
+
+
 
 
 @Composable
@@ -73,7 +75,7 @@ fun LandingPage(paddingValues: PaddingValues){
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LandingPagePreview() {
-    LandingPageTheme {
+    AppTheme(highContrast = true) {
         MainLayout { innerPadding, selectedItem ->
             LandingPage(innerPadding)
         }
