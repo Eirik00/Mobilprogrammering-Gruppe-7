@@ -53,7 +53,7 @@ fun CreateTripScreen() {
     ) {
         Text(text = "Create a New Trip")
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* Add your trip creation logic here */ }) {
+        Button(onClick = { /* Logikk for create trip her */ }) {
             Text("Create Trip")
         }
     }
