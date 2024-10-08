@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -50,43 +51,14 @@ fun LandingPage(paddingValues: PaddingValues){
     Column(
         modifier = Modifier
             .verticalScroll(scrollState)
+            .fillMaxHeight()
     ){
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-
-            Button(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(),
-                onClick = { Log.d("STATE","Create New Trip Clicked!") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                ),
-                shape = RoundedCornerShape(10)
-            ){
-                Text("Create New Trip", fontSize = 20.sp)
-            }
-            Button(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(),
-                onClick = { Log.d("State", "Popular Trips Clicked!") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                ),
-                shape = RoundedCornerShape(10)
-            ){
-                Text("Popular Trips", fontSize = 20.sp)
-            }
-        }
         // Current Trips
         Column(){
             Box(
                 modifier = Modifier
                     .padding(16.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainer)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -99,9 +71,10 @@ fun LandingPage(paddingValues: PaddingValues){
                         "Current Trips",
                         textAlign = TextAlign.Center,
                         fontSize = 20.sp,
-                        textDecoration = TextDecoration.Underline
+                        textDecoration = TextDecoration.Underline,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    CurrentTripRow("Sarpsborg Lysløype", "Not Started", true)
+                    CurrentTripRow("Sarpsborg Lysløype", "69%", true)
                     for( i in 1..5) {
                         CurrentTripRow("Sarpsborg Lysløype", "Not Started", false)
                     }
@@ -110,7 +83,7 @@ fun LandingPage(paddingValues: PaddingValues){
                             .align(Alignment.CenterHorizontally),
                         onClick = { Log.d("State", "Popular Trips Clicked!") },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = MaterialTheme.colorScheme.primary,
                         ),
                         shape = RoundedCornerShape(10)
                     ){
@@ -124,6 +97,7 @@ fun LandingPage(paddingValues: PaddingValues){
             Box(
                 modifier = Modifier
                     .padding(16.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainer)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -164,11 +138,11 @@ fun PopularTripRow(tripName: String) {
     Row(modifier = Modifier
         .padding(5.dp)
         .fillMaxWidth()
-        .background(Color(227, 195, 79, 255))
+        .background(MaterialTheme.colorScheme.tertiary)
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-        Text(tripName, modifier = Modifier.weight(1f))
+        Text(tripName, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onTertiary)
         Icon(
             imageVector = Icons.Filled.FavoriteBorder,
             contentDescription = "Favourite Icon",
@@ -183,17 +157,19 @@ fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean 
         .padding(5.dp)
         .fillMaxWidth()
         .background(if (startedBool) MaterialTheme.colorScheme.tertiary
-            else MaterialTheme.colorScheme.tertiaryContainer)
+            else MaterialTheme.colorScheme.secondary)
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
-        Text(tripName, modifier = Modifier.weight(1f))
-        Text(tripProgress, modifier = Modifier.align(Alignment.CenterVertically))
+        Text(tripName, modifier = Modifier.weight(1f), color = if(startedBool)
+            MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary)
+        Text(tripProgress, modifier = Modifier.align(Alignment.CenterVertically), color = if(startedBool)
+            MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary)
     }
 }
 
 
-@Preview(showBackground = true, showSystemUi = true, )
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LandingPagePreview() {
     AppTheme(highContrast = true) {
