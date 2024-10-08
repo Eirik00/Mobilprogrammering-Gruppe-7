@@ -99,25 +99,9 @@ fun LandingPage(paddingValues: PaddingValues){
                         fontSize = 20.sp,
                         textDecoration = TextDecoration.Underline
                     )
-                    Row(modifier = Modifier
-                        .padding(5.dp)
-                        .fillMaxWidth()
-                        .background(Color(179, 192, 94, 255))
-                        .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text("Sarpsborg Lysløype", modifier = Modifier.weight(1f))
-                        Text("68%", modifier = Modifier.align(Alignment.CenterVertically))
-                    }
-                    Row(modifier = Modifier
-                        .padding(5.dp)
-                        .fillMaxWidth()
-                        .background(Color(227, 195, 79, 255))
-                        .padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text("Oslo Sightseeing", modifier = Modifier.weight(1f))
-                        Text("Not Started", modifier = Modifier.align(Alignment.CenterVertically))
+                    CurrentTripRow("Sarpsborg Lysløype", "Not Started", true)
+                    for( i in 1..5) {
+                        CurrentTripRow("Sarpsborg Lysløype", "Not Started", false)
                     }
                     Button(
                         modifier = Modifier
@@ -190,6 +174,22 @@ fun PopularTripRow(tripName: String) {
         )//modifier = Modifier.align(Alignment.CenterVertically)
     }
 }
+
+@Composable
+fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean = false) {
+    Row(modifier = Modifier
+        .padding(5.dp)
+        .fillMaxWidth()
+        .background(if (startedBool) MaterialTheme.colorScheme.tertiary
+            else MaterialTheme.colorScheme.tertiaryContainer)
+        .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Text(tripName, modifier = Modifier.weight(1f))
+        Text(tripProgress, modifier = Modifier.align(Alignment.CenterVertically))
+    }
+}
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

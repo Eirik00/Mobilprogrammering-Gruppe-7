@@ -258,7 +258,7 @@ val unspecified_scheme = ColorFamily(
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     highContrast: Boolean = false, // New parameter for high contrast
     content: @Composable () -> Unit
 ) {
