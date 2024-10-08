@@ -27,7 +27,9 @@ class MainActivity : ComponentActivity() {
                             // Handle screen navigation based on selected index
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)  // Home screen
+                                1 -> CreateTripPage()           // Create trip page
                                 2 -> MapPage(innerPadding)                 // Map screen
+
                                 else -> Text("No page for index: $selectedIndex")
                             }
                         }
