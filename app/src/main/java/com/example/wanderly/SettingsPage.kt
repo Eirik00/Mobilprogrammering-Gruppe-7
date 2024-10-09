@@ -15,15 +15,45 @@ import androidx.compose.ui.unit.dp
 import android.util.Log
 
 @Composable
-fun SettingsPage() {
+fun SettingsPage(
+    isDarkThemeEnabled: Boolean,
+    onThemeChange: (Boolean) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
-        Text(text = "Settings")
+        Text(text = "Settings", style = MaterialTheme.typography.titleLarge)
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Dark Mode Toggle
+        DarkModeToggle(isDarkThemeEnabled = isDarkThemeEnabled, onToggle = onThemeChange)
+
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun DarkModeToggle(isDarkThemeEnabled: Boolean, onToggle: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "Dark Mode", style = MaterialTheme.typography.titleSmall)
+        Spacer(modifier = Modifier.weight(1f))
+        Switch(
+            checked = isDarkThemeEnabled,
+            onCheckedChange = { onToggle(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
+            )
+        )
     }
 }

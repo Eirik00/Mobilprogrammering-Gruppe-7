@@ -16,8 +16,13 @@ import com.example.compose.AppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // State to manage dark theme toggle
+        var isDarkTheme by mutableStateOf(false)
+
         setContent {
-            AppTheme {
+            // Apply dark or light theme based on the state
+            AppTheme(darkTheme = isDarkTheme) {
                 Surface(color = MaterialTheme.colorScheme.surface) {
                     MainLayout { innerPadding, selectedIndex ->
                         Box(
@@ -25,13 +30,15 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .padding(innerPadding)
                         ) {
-                            // Handle screen navigation based on selected index
                             when (selectedIndex) {
-                                0 -> LandingPage(innerPadding)  // Home screen
-                                1 -> CreateTripPage()           // Create trip page
-                                2 -> MapPage(innerPadding)      // Map screen
+                                0 -> LandingPage(innerPadding)
+                                1 -> CreateTripPage()
+                                2 -> MapPage(innerPadding)
                                 3 -> ProfilePage()
-                                4 -> SettingsPage()
+                                4 -> SettingsPage(
+                                    isDarkThemeEnabled = isDarkTheme,
+                                    onThemeChange = { isDarkTheme = it }
+                                )
                                 else -> Text("No page for index: $selectedIndex")
                             }
                         }
@@ -41,6 +48,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 @Composable
 fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
