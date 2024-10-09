@@ -149,6 +149,9 @@ fun PopularTripRow(tripName: String) {
         .fillMaxWidth()
         .clip(RoundedCornerShape(10.dp))
         .background(MaterialTheme.colorScheme.secondary)
+        .clickable{
+            Log.d("STATE", "$tripName Clicked!") // Reise funksjon
+        }
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ){
@@ -163,7 +166,9 @@ fun PopularTripRow(tripName: String) {
             imageVector = iconImageVector,
             contentDescription = "Favourite Icon",
             tint = MaterialTheme.colorScheme.onSecondary,
-            modifier = Modifier.clickable{isFavorited = !isFavorited}
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.small)
+                .clickable{ isFavorited = !isFavorited}
         )//modifier = Modifier.align(Alignment.CenterVertically)
     }
 }
@@ -176,6 +181,9 @@ fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean 
         .clip(RoundedCornerShape(10.dp))
         .background(if (startedBool) MaterialTheme.colorScheme.tertiary
             else MaterialTheme.colorScheme.secondary)
+        .clickable{
+            Log.d("STATE", "$tripName Clicked!") // Reise funksjon
+        }
         .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ){

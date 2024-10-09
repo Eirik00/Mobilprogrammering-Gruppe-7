@@ -55,7 +55,7 @@ fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
     var selectedItem by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        topBar = { Header() },
+        topBar = { if(selectedItem != 2){ Header() }},
         bottomBar = {
             Navbar(
                 selectedItem = selectedItem,

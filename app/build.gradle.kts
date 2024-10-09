@@ -12,7 +12,7 @@ localProperties.load(FileInputStream(localPropertiesFile))
 
 android {
     namespace = "com.example.wanderly"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.wanderly"
@@ -21,7 +21,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["API_KEY"] = "\"${localProperties["apiKey"] ?: ""}\""
+        manifestPlaceholders["API_KEY"] = "${localProperties["apiKey"] ?: ""}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
