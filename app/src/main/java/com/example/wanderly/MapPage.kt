@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,18 +44,22 @@ import com.example.compose.AppTheme
 
 @Composable
 fun MapPage(paddingValues: PaddingValues){
-    GoogleMapView(savedInstanceState = null)
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
+    )
+    {
+        GoogleMapView(modifier = Modifier.fillMaxSize())
+    }
 }
 
 @Composable
-fun GoogleMapView(savedInstanceState: Bundle?) {
+fun GoogleMapView(modifier: Modifier = Modifier) {
     // Remember the MapView so it isn't recreated on recomposition
     val mapView = rememberMapViewWithLifecycle()
 
-    AndroidView({ mapView }) { map ->
-        map.onCreate(savedInstanceState)
-        map.getMapAsync { googleMap ->
-            // Configure the Google Map
+    AndroidView(factory = { mapView }, modifier = modifier) { mv ->
+        mv.getMapAsync { googleMap ->
             val initialPosition = LatLng(0.0, 0.0)
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initialPosition, 10f))
             googleMap.addMarker(MarkerOptions().position(initialPosition).title("Marker"))
@@ -70,10 +75,23 @@ fun rememberMapViewWithLifecycle(): MapView {
     }
 
     // Make the MapView follow the Compose lifecycle
+    val lifecycleObserver = rememberMapLifecycleObserver(mapView)
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, mapView) {
-        val callbacks = LifecycleEventObserver { _, event ->
-            when (event) {
+        lifecycle.addObserver(lifecycleObserver)
+        onDispose {
+            lifecycle.removeObserver(lifecycleObserver)
+        }
+    }
+
+    return mapView
+}
+
+@Composable
+fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
+    remember(mapView) {
+        LifecycleEventObserver { _, event ->
+            when(event){
                 Lifecycle.Event.ON_CREATE -> mapView.onCreate(Bundle())
                 Lifecycle.Event.ON_START -> mapView.onStart()
                 Lifecycle.Event.ON_RESUME -> mapView.onResume()
@@ -83,15 +101,7 @@ fun rememberMapViewWithLifecycle(): MapView {
                 else -> throw IllegalStateException()
             }
         }
-
-        lifecycle.addObserver(callbacks)
-        onDispose {
-            lifecycle.removeObserver(callbacks)
-        }
     }
-
-    return mapView
-}
 
 @Preview(showBackground = true)
 @Composable

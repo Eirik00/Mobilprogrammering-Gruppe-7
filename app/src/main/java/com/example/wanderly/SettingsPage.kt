@@ -49,14 +49,13 @@ fun DarkModeToggle(isDarkThemeEnabled: Boolean, onToggle: (Boolean) -> Unit) {
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "Dark Mode", style = MaterialTheme.typography.titleSmall)
-        Spacer(modifier = Modifier.weight(1f))
+        Text(text = "Dark Mode", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         Switch(
             checked = isDarkThemeEnabled,
             onCheckedChange = { onToggle(it) },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
             )
         )
     }
