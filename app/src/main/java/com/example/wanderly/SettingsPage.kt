@@ -14,6 +14,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import android.util.Log
 
+const val AppVersion = "Pre Alpha"
+
 @Composable
 fun SettingsPage(
     isDarkThemeEnabled: Boolean,
@@ -34,6 +36,8 @@ fun SettingsPage(
         DarkModeToggle(isDarkThemeEnabled = isDarkThemeEnabled, onToggle = onThemeChange)
 
         Spacer(modifier = Modifier.height(32.dp))
+        
+        AppVersionDisplay(AppVersion)
     }
 }
 
@@ -56,4 +60,13 @@ fun DarkModeToggle(isDarkThemeEnabled: Boolean, onToggle: (Boolean) -> Unit) {
             )
         )
     }
+}
+
+@Composable
+fun AppVersionDisplay(AppVersion: String) {
+    Text(
+        text = "App Version: $AppVersion",
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(top = 16.dp)
+    )
 }
