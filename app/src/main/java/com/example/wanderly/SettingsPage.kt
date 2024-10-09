@@ -1,5 +1,6 @@
 package com.example.wanderly
 
+import SettingsViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,14 +14,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import android.util.Log
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.ui.theme.AppTypography
 
-const val AppVersion = "Pre Alpha"
+const val AppVersion = BuildConfig.VERSION_NAME
 
 @Composable
 fun SettingsPage(
-    isDarkThemeEnabled: Boolean,
-    onThemeChange: (Boolean) -> Unit
+    settingsViewModel: SettingsViewModel
 ) {
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,8 +37,27 @@ fun SettingsPage(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Dark Mode Toggle
-        DarkModeToggle(isDarkThemeEnabled = isDarkThemeEnabled, onToggle = onThemeChange)
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+        ) {
+            // Dark Mode Toggle
+            SettingToggle (titleName = "Dark Mode",
+                settingToggle = settingsViewModel.isDarkTheme.collectAsState().value,
+                onToggle = {
+                settingsViewModel.toggleDarkTheme()
+            })
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 2.dp,
+            )
+            SettingToggle (titleName = "High Contrast",
+                settingToggle = settingsViewModel.highContrast.collectAsState().value,
+                onToggle = {
+                settingsViewModel.toggleHighContrast()
+            })
+
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
         
@@ -42,16 +66,16 @@ fun SettingsPage(
 }
 
 @Composable
-fun DarkModeToggle(isDarkThemeEnabled: Boolean, onToggle: (Boolean) -> Unit) {
+fun SettingToggle(titleName: String, settingToggle: Boolean, onToggle: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "Dark Mode", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        Text(text = titleName, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         Switch(
-            checked = isDarkThemeEnabled,
+            checked = settingToggle,
             onCheckedChange = { onToggle(it) },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,

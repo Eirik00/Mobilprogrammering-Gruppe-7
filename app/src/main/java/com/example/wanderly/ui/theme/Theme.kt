@@ -1,6 +1,7 @@
 package com.example.compose
 import android.app.Activity
 import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -257,7 +258,7 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isNightMode(),
     dynamicColor: Boolean = false,
     highContrast: Boolean = false, // New parameter for high contrast
     content: @Composable () -> Unit
@@ -280,4 +281,10 @@ fun AppTheme(
     )
 }
 
+@Composable
+private fun isNightMode() = when (AppCompatDelegate.getDefaultNightMode()) {
+    AppCompatDelegate.MODE_NIGHT_NO -> false
+    AppCompatDelegate.MODE_NIGHT_YES -> true
+    else -> isSystemInDarkTheme()
+}
 
