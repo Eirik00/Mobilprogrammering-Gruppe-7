@@ -1,5 +1,6 @@
 package com.example.wanderly
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -93,6 +94,9 @@ fun PublishedTripRow(tripName: String) {
             .padding(8.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable {
+                Log.d("STATE", "$tripName Clicked!")
+            }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
