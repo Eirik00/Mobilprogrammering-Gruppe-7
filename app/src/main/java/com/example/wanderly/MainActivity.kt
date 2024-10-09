@@ -13,8 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.AppTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -22,8 +28,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
 
-            val isDarkTheme = isSystemInDarkTheme()
-
+            val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme)}
 
             AppTheme(
@@ -31,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 highContrast = settingsViewModel.highContrast.collectAsState().value
             ) {
                 Surface(color = MaterialTheme.colorScheme.surface) {
-                    MainLayout { innerPadding, selectedIndex ->
+                    MainLayout {innerPadding, selectedIndex ->
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -53,17 +58,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
-    var selectedItem by remember { mutableIntStateOf(0) }
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = { if(selectedItem != 2){ Header() }},
         bottomBar = {
             Navbar(
                 selectedItem = selectedItem,
-                onItemSelected = { index -> selectedItem = index }
+                onItemSelected = {index -> selectedItem = index}
             )
         }
     ) { innerPadding ->

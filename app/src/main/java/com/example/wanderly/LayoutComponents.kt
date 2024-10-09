@@ -54,7 +54,6 @@ fun Header() {
 fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
     val items = listOf("Home", "Create", "Map", "Profile", "Settings")
 
-
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.primary
     ) {
