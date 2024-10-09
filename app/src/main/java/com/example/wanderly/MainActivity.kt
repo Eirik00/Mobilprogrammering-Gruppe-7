@@ -16,9 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.AppTheme
 
-object Constants {
-    const val APP_VERSION = "Pre Alpha" // Hvilken versjon av appen vi er på
-}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
