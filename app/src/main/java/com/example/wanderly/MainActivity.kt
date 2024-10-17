@@ -1,36 +1,57 @@
 package com.example.wanderly
 
+import SettingsViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.FlowRowScopeInstance.align
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.landingpage.ui.theme.LandingPageTheme
-import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.compose.AppTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            LandingPageTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    LandingPage()
+
+            val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
+            val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme)}
+
+            AppTheme(
+                darkTheme = settingsViewModel.isDarkTheme.collectAsState().value,
+                highContrast = settingsViewModel.highContrast.collectAsState().value
+            ) {
+                Surface(color = MaterialTheme.colorScheme.surface) {
+                    MainLayout {innerPadding, selectedIndex ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                        ) {
+                            when (selectedIndex) {
+                                0 -> LandingPage(innerPadding)
+                                1 -> CreateTripPage()
+                                2 -> MapPage(innerPadding)
+                                3 -> ProfilePage()
+                                4 -> SettingsPage(settingsViewModel)
+                                else -> Text("No page for index: $selectedIndex")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -38,74 +59,18 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LandingPage() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-    // Main layout
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.secondary)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // App title
-            Text(
-                text = "Welcome to MyApp",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
-            // App description
-            Text(
-                text = "An amazing app that solves your problem in no time.",
-                fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 24.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+    Scaffold(
+        topBar = { if(selectedItem != 2){ Header() }},
+        bottomBar = {
+            Navbar(
+                selectedItem = selectedItem,
+                onItemSelected = {index -> selectedItem = index}
             )
-
-            // Image placeholder
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "App image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 24.dp)
-            )
-
-            // Get Started button
-            Button(
-                onClick = { /*TODO: Add action*/ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Text(
-                    text = "Get Started",
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-            }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    LandingPageTheme {
-        LandingPage()
+    ) { innerPadding ->
+        content(innerPadding, selectedItem)
     }
 }
