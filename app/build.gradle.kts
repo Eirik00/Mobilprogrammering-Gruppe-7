@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 val localPropertiesFile = rootProject.file("local.properties")
@@ -74,6 +75,7 @@ dependencies {
 
     implementation(libs.play.services.maps)
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
