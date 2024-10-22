@@ -11,11 +11,11 @@ val localProperties = Properties()
 localProperties.load(FileInputStream(localPropertiesFile))
 
 android {
-    namespace = "com.example.wanderly"
+    namespace = "com.gruppe7.wanderly"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.wanderly"
+        applicationId = "com.gruppe7.wanderly"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

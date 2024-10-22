@@ -1,4 +1,5 @@
-import androidx.compose.foundation.isSystemInDarkTheme
+package com.gruppe7.wanderly
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow

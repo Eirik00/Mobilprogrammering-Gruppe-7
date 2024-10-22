@@ -1,4 +1,4 @@
-package com.example.wanderly
+package com.gruppe7.wanderly
 
 import android.content.Context
 import android.os.Bundle
