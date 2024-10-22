@@ -1,9 +1,7 @@
 package com.example.wanderly
 
 import SettingsViewModel
-import android.content.ContentValues.TAG
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -20,8 +18,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.compose.AppTheme
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -31,22 +27,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val db = Firebase.firestore
-
-
-
-            db.collection("trips")
-                .get()
-                .addOnSuccessListener { result ->
-                    for (document in result) {
-                        Log.d(TAG, "${document.id} => ${document.data}")
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    Log.w(TAG, "Error getting documents.", exception)
-                }
-
-
 
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme)}
