@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.ColorFilter
 
 // Header Composable
 @Composable
-fun Header(authViewModel: AuthViewModel?) {
+fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
     if(authViewModel == null){
         return
     }
@@ -29,7 +29,7 @@ fun Header(authViewModel: AuthViewModel?) {
     if(isLoggedIn){
         menuList = listOf("Log Out")
     }else{
-        menuList = listOf("Log in", "Register")
+        menuList = listOf("Log in/Register")
     }
 
     Column(
@@ -62,7 +62,7 @@ fun Header(authViewModel: AuthViewModel?) {
                     onDismissRequest = { profileExpanded = false }
                 ) {
                     menuList.forEach {
-                        DropdownMenuItem( onClick = { Log.d("STATE", "Clicked dropdownmenu $it")},
+                        DropdownMenuItem( onClick = {if(it == "Log in/Register"){onLoginRegisterClicked()} },
                             text = {Text(text=it)})
                     }
                 }

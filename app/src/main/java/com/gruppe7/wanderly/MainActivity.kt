@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
                                 2 -> MapPage(innerPadding)
                                 3 -> ProfilePage()
                                 4 -> SettingsPage(settingsViewModel)
+                                5 -> Login(authViewModel)
                                 else -> Text("No page for index: $selectedIndex")
                             }
                         }
@@ -54,8 +55,12 @@ class MainActivity : ComponentActivity() {
 fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (PaddingValues, Int) -> Unit) {
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
+    fun navigateToLogin() {
+        selectedItem = 5
+    }
+
     Scaffold(
-        topBar = { if(selectedItem != 2){ Header(authViewModel) }},
+        topBar = { if(selectedItem != 2){ Header(authViewModel, onLoginRegisterClicked = ::navigateToLogin) }},
         bottomBar = {
             Navbar(
                 selectedItem = selectedItem,
