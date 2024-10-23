@@ -7,7 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.wanderly.BuildConfig
+import com.gruppe7.wanderly.BuildConfig
 
 const val AppVersion = BuildConfig.VERSION_NAME
 

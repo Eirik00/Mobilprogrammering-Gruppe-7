@@ -1,4 +1,4 @@
-package com.example.ui.theme
+package com.gruppe7.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.sp
 
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.text.googlefonts.Font
-import com.example.wanderly.R
+import com.gruppe7.wanderly.R
 
 val provider = GoogleFont.Provider(
     providerAuthority = "com.google.android.gms.fonts",
