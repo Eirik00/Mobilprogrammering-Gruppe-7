@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.compose.AppTheme
 
 @Composable
 fun ProfilePage() {
@@ -103,5 +105,15 @@ fun PublishedTripRow(tripName: String) {
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ProfilePagePreview() {
+    AppTheme(highContrast = true) {
+        MainLayout { innerPadding, selectedItem ->
+            ProfilePage()
+        }
     }
 }

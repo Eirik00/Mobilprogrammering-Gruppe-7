@@ -10,22 +10,25 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.example.compose.AppTheme
+import com.google.firebase.FirebaseApp
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         setContent {
 
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
+            val authViewModel = remember { AuthViewModel()}
 
             AppTheme(
                 darkTheme = settingsViewModel.isDarkTheme.collectAsState().value,
                 highContrast = settingsViewModel.highContrast.collectAsState().value
             ) {
                 Surface(color = MaterialTheme.colorScheme.surface) {
-                    MainLayout {innerPadding, selectedIndex ->
+                    MainLayout(authViewModel) { innerPadding, selectedIndex ->
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -48,11 +51,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainLayout(content: @Composable (PaddingValues, Int) -> Unit) {
+fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (PaddingValues, Int) -> Unit) {
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
-        topBar = { if(selectedItem != 2){ Header() }},
+        topBar = { if(selectedItem != 2){ Header(authViewModel) }},
         bottomBar = {
             Navbar(
                 selectedItem = selectedItem,

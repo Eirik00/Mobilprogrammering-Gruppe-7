@@ -17,7 +17,21 @@ import androidx.compose.ui.graphics.ColorFilter
 
 // Header Composable
 @Composable
-fun Header() {
+fun Header(authViewModel: AuthViewModel?) {
+    if(authViewModel == null){
+        return
+    }
+
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
+    var profileExpanded by remember { mutableStateOf(false) }
+    var menuList = listOf<String>()
+
+    if(isLoggedIn){
+        menuList = listOf("Log Out")
+    }else{
+        menuList = listOf("Log in", "Register")
+    }
+
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.surface)
@@ -38,11 +52,20 @@ fun Header() {
                     modifier = Modifier
                         .clip(CircleShape)
                         .clickable {
-                            Log.d("STATE", "Clicked!") // Debug, can be replaced with functionality
+                            profileExpanded = !profileExpanded
                         },
                     painter = painterResource(id = R.drawable.default_profile_icon),
                     contentDescription = "Profile Picture",
                 )
+                DropdownMenu(
+                    expanded = profileExpanded,
+                    onDismissRequest = { profileExpanded = false }
+                ) {
+                    menuList.forEach {
+                        DropdownMenuItem( onClick = { Log.d("STATE", "Clicked dropdownmenu $it")},
+                            text = {Text(text=it)})
+                    }
+                }
             }
         }
     }
