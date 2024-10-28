@@ -31,6 +31,14 @@ class AuthViewModel : ViewModel() {
         {
             task -> if (task.isSuccessful) {
                     Log.d("TAG", "createUserWithEmail:Success")
+                    val user = task.result?.user
+                    user?.sendEmailVerification()?.addOnCompleteListener { task ->
+                        if(task.isSuccessful) {
+                            Log.d("TAG", "sendEmailVerification: Success")
+                        }else{
+                            Log.w("TAG", "sendEmailVerification: failure", task.exception)
+                        }
+                    }
                     result=true
                 }else{
                     Log.w("TAG", "createUserWithEmail:failure", task.exception)
