@@ -74,7 +74,7 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
 // Navbar Composable
 @Composable
 fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
-    val items = listOf("Home", "Create", "Map", "Profile", "Settings")
+    val items = listOf("Home", "Trips", "Map", "Profile", "Settings")
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.primary
@@ -102,7 +102,7 @@ fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
 private fun getIconResource(item: String): Int {
     return when (item) {
         "Home" -> R.drawable.ic_home
-        "Create" -> R.drawable.ic_create
+        "Trips" -> R.drawable.ic_trip
         "Map" -> R.drawable.ic_map
         "Profile" -> R.drawable.ic_profile_navbar
         "Settings" -> R.drawable.ic_settings
