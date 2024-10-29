@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                         ) {
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)
-                                1 -> CreateTripPage()
+                                1 -> TripPage()
                                 2 -> MapPage(innerPadding)
                                 3 -> ProfilePage()
                                 4 -> SettingsPage(settingsViewModel)
@@ -88,3 +88,4 @@ fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (Paddi
         content(innerPadding, selectedItem)
     }
 }
+
