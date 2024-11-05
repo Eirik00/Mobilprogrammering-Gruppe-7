@@ -1,71 +1,87 @@
 package com.gruppe7.wanderly
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.google.firebase.firestore.GeoPoint
 
 @Composable
 fun TripPage() {
     var showCreateTripPage by remember { mutableStateOf(false) }
-    var selectedTrip by remember { mutableStateOf<Trip?>(null) } // Holds selected trip details
+    var showPopularTripsPage by remember { mutableStateOf(false) }
+    var showFindMoreTripsPage by remember { mutableStateOf(false) }
+    var showSearchPage by remember { mutableStateOf(false) }
+    var selectedTrip by remember { mutableStateOf<Trip?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
-    if (showCreateTripPage) {
-        CreateTripPage(onBack = { showCreateTripPage = false })
-    } else {
-        Scaffold(
-            floatingActionButton = { AddTripButton { showCreateTripPage = true } }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                SearchSection()
-                Spacer(modifier = Modifier.height(16.dp))
-                TripSections(onTripClick = { trip -> selectedTrip = trip })
+    when {
+        showCreateTripPage -> {
+            CreateTripPage(onBack = { showCreateTripPage = false })
+        }
+        showPopularTripsPage -> {
+            PopularTripsPage(onBack = { showPopularTripsPage = false })
+        }
+        showFindMoreTripsPage -> {
+            FindMoreTripsPage(onBack = { showFindMoreTripsPage = false })
+        }
+        showSearchPage -> {
+            SearchPage(searchQuery) { showSearchPage = false }
+        }
+        else -> {
+            Scaffold(
+                floatingActionButton = { AddTripButton { showCreateTripPage = true } }
+            ) { padding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SearchSection{ searchText ->
+                        searchQuery = searchText
+                        showSearchPage = true
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TripSections(
+                        onTripClick = { trip -> selectedTrip = trip },
+                        navigateToPopularTrips = { showPopularTripsPage = true },
+                        navigateToFindMoreTrips = { showFindMoreTripsPage = true }
+                    )
+                }
             }
         }
     }
 
-    // Show dialog if a trip is selected
     selectedTrip?.let { trip ->
         SavedTripDialog(
             trip = trip,
-            onDismiss = { selectedTrip = null })
+            onDismiss = { selectedTrip = null }
+        )
     }
 }
 
 data class Trip(
     val name: String,
     val type: String,
+    val start: GeoPoint,
     val description: String,
     val packingList: String,
-    val destination: String,
+    val endPoint: GeoPoint,
     val imageUrl: String
 )
 
 @Composable
-fun SearchSection() {
+fun SearchSection(navigateToSearchPage: (String) -> Unit) {
     var searchText by remember { mutableStateOf("") }
     Row(
         modifier = Modifier
@@ -78,14 +94,13 @@ fun SearchSection() {
             onValueChange = { searchText = it },
             placeholder = { Text("Type location") },
             modifier = Modifier
-                .weight(1f) // Makes the TextField take available space
-                .padding(end = 8.dp) // Adds spacing between TextField and Button
+                .weight(1f)
+                .padding(end = 8.dp)
         )
 
         Button(
-            onClick = { /* Search action */ },
-            modifier = Modifier
-                .height(56.dp) // Matches the TextField's height
+            onClick = { navigateToSearchPage(searchText) },
+            modifier = Modifier.height(56.dp)
         ) {
             Text("Search")
         }
@@ -93,14 +108,19 @@ fun SearchSection() {
 }
 
 @Composable
-fun TripSections(onTripClick: (Trip) -> Unit) {
+fun TripSections(
+    onTripClick: (Trip) -> Unit,
+    navigateToPopularTrips: () -> Unit,
+    navigateToFindMoreTrips: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
                 .padding(8.dp)
-                .background(Color.LightGray, RoundedCornerShape(8.dp)),
+                .background(Color.LightGray, RoundedCornerShape(8.dp))
+                .clickable { navigateToPopularTrips() },
             contentAlignment = Alignment.Center
         ) {
             Text("Most popular trips", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -113,7 +133,8 @@ fun TripSections(onTripClick: (Trip) -> Unit) {
                 .fillMaxWidth()
                 .height(100.dp)
                 .padding(8.dp)
-                .background(Color.LightGray, RoundedCornerShape(8.dp)),
+                .background(Color.LightGray, RoundedCornerShape(8.dp))
+                .clickable { navigateToFindMoreTrips() },
             contentAlignment = Alignment.Center
         ) {
             Text("Find more trips", fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -129,17 +150,19 @@ fun TripSections(onTripClick: (Trip) -> Unit) {
             Trip(
                 name = "Midgard vikingsenter - 1 day",
                 type = "Historical",
+                start = GeoPoint(59.3870247516921, 10.466289217259918),
                 description = "Explore Viking history with a full day at Midgard.",
                 packingList = "Camera, Water Bottle, Snacks",
-                destination = "Midgard vikingsenter",
-                imageUrl = "drawable/https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"
+                endPoint = GeoPoint(59.30765675697069, 11.087157826950184),
+                imageUrl = "https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"
             ),
             Trip(
                 name = "Vansjø - 3 days",
                 type = "Adventure",
+                start = GeoPoint(59.354477808278475, 10.923720027315635),
                 description = "Enjoy scenic views and outdoor activities over three days.",
                 packingList = "Tent, Sleeping Bag, Food Supplies",
-                destination = "Vansjø",
+                endPoint = GeoPoint(59.444123, 10.694452),
                 imageUrl = ""
             )
         )
@@ -152,13 +175,12 @@ fun TripSections(onTripClick: (Trip) -> Unit) {
 }
 
 @Composable
-fun SavedTripCard(trip: Trip , onClick: () -> Unit ) {
+fun SavedTripCard(trip: Trip, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable(onClick = onClick),
-
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -168,7 +190,7 @@ fun SavedTripCard(trip: Trip , onClick: () -> Unit ) {
         ) {
             Text(trip.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text("Type: ${trip.type}", fontSize = 14.sp)
-            Text("Destination: ${trip.destination}", fontSize = 14.sp)
+            Text("Destination: ${trip.endPoint.latitude}, ${trip.endPoint.longitude}", fontSize = 14.sp)
         }
     }
 }
@@ -182,21 +204,11 @@ fun SavedTripDialog(trip: Trip, onDismiss: () -> Unit) {
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                /* Bilde fra internett
-                Image(
-                    painter = rememberImagePainter(trip.imageUrl),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(Color.LightGray, RoundedCornerShape(8.dp))
-                )*/
-
                 Text("Type: ${trip.type}", fontSize = 16.sp)
+                Text("Start: ${trip.start.latitude}, ${trip.start.longitude}", fontSize = 16.sp)
                 Text("Description: ${trip.description}", fontSize = 16.sp)
                 Text("Packing List: ${trip.packingList}", fontSize = 16.sp)
-                Text("Destination: ${trip.destination}", fontSize = 16.sp)
+                Text("Destination: ${trip.endPoint.latitude}, ${trip.endPoint.longitude}", fontSize = 16.sp)
             }
         },
         confirmButton = {
