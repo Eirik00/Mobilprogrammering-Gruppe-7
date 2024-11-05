@@ -22,10 +22,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.AppTheme
+import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.MainLayout
 
 @Composable
-fun ProfilePage() {
+fun ProfilePage(authViewModel: AuthViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +49,7 @@ fun ProfilePage() {
 
         // Name
         Text(
-            text = "Anders Andersen",
+            text = "authViewModel.user.",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
@@ -113,8 +114,8 @@ fun PublishedTripRow(tripName: String) {
 @Composable
 fun ProfilePagePreview() {
     AppTheme(highContrast = true) {
-        MainLayout { innerPadding, selectedItem ->
-            ProfilePage()
+        MainLayout { innerPadding, selectedItem,_ ->
+            ProfilePage(AuthViewModel())
         }
     }
 }

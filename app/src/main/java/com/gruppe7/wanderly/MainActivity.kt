@@ -1,8 +1,6 @@
 package com.gruppe7.wanderly
 
-import android.content.ContentValues.TAG
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,9 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.example.compose.AppTheme
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import com.google.firebase.FirebaseApp
 import com.gruppe7.wanderly.pages.LandingPage
 import com.gruppe7.wanderly.pages.MapPage
@@ -27,30 +24,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         setContent {
-
-            val db = Firebase.firestore
-
-            db.collection("trips")
-                .get()
-                .addOnSuccessListener { result ->
-                    for (document in result) {
-                        Log.d(TAG, "${document.id} => ${document.data}")
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    Log.w(TAG, "Error getting documents.", exception)
-                }
-
+            val navController = rememberNavController()
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
-            val authViewModel = remember { AuthViewModel()}
+            val authViewModel = remember { AuthViewModel() }
+            val tripsViewModel = remember { TripsViewModel() }
 
             AppTheme(
                 darkTheme = settingsViewModel.isDarkTheme.collectAsState().value,
                 highContrast = settingsViewModel.highContrast.collectAsState().value
             ) {
                 Surface(color = MaterialTheme.colorScheme.surface) {
-                    MainLayout(authViewModel) { innerPadding, selectedIndex ->
+                    MainLayout(authViewModel) { innerPadding, selectedIndex, loginMode ->
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -58,11 +43,11 @@ class MainActivity : ComponentActivity() {
                         ) {
                             when (selectedIndex) {
                                 0 -> LandingPage(innerPadding)
-                                1 -> TripPage()
+                                1 -> TripPage(tripsViewModel)
                                 2 -> MapPage(innerPadding)
-                                3 -> ProfilePage()
+                                3 -> ProfilePage(authViewModel)
                                 4 -> SettingsPage(settingsViewModel)
-                                5 -> Login(authViewModel)
+                                5 -> Login(loginMode ?: "none", authViewModel)
                                 else -> Text("No page for index: $selectedIndex")
                             }
                         }
@@ -74,11 +59,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (PaddingValues, Int) -> Unit) {
+fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (PaddingValues, Int, String?) -> Unit) {
     var selectedItem by rememberSaveable { mutableIntStateOf(0) }
+    var mode by rememberSaveable { mutableStateOf("none") }
 
-    fun navigateToLogin() {
+    fun navigateToLogin(modestr: String) {
         selectedItem = 5
+        mode = modestr
     }
 
     Scaffold(
@@ -90,7 +77,7 @@ fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (Paddi
             )
         }
     ) { innerPadding ->
-        content(innerPadding, selectedItem)
+        content(innerPadding, selectedItem, mode)
     }
 }
 

@@ -3,7 +3,6 @@ package com.gruppe7.wanderly.pages
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,13 +21,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.GeoPoint
 import com.gruppe7.wanderly.TripObject
+import com.gruppe7.wanderly.TripsViewModel
 import okio.IOException
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun TripPage() {
+fun TripPage(tripsViewModel: TripsViewModel) {
     var showCreateTripPage by remember { mutableStateOf(false) }
     var showPopularTripsPage by remember { mutableStateOf(false) }
     var showFindMoreTripsPage by remember { mutableStateOf(false) }
@@ -47,7 +47,7 @@ fun TripPage() {
             FindMoreTripsPage(onBack = { showFindMoreTripsPage = false })
         }
         showSearchPage -> {
-            SearchPage(searchQuery) { showSearchPage = false }
+            SearchPage(tripsViewModel, searchQuery) { showSearchPage = false }
         }
         else -> {
             Scaffold(

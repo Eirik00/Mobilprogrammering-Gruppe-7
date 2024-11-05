@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
-
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
@@ -89,7 +88,7 @@ fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
 @Composable
 fun MapPagePreview() {
     AppTheme {
-        MainLayout { innerPadding, selectedItem ->
+        MainLayout { innerPadding, selectedItem,_ ->
             MapPage(innerPadding)
         }
     }

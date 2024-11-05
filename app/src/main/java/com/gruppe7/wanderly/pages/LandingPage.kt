@@ -201,7 +201,7 @@ fun LandingPage(paddingValues: PaddingValues) {
     @Composable
     fun LandingPagePreview() {
         AppTheme(highContrast = true) {
-            MainLayout { innerPadding, selectedItem ->
+            MainLayout { innerPadding, selectedItem,_ ->
                 LandingPage(innerPadding)
             }
         }

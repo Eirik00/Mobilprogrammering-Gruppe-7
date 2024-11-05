@@ -12,24 +12,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import android.util.Log
 import androidx.compose.ui.graphics.ColorFilter
 
 // Header Composable
 @Composable
-fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
+fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: (String) -> Unit) {
     if(authViewModel == null){
         return
     }
 
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     var profileExpanded by remember { mutableStateOf(false) }
-    var menuList = listOf<String>()
 
-    if(isLoggedIn){
-        menuList = listOf("Log Out")
+    var menuList = if(isLoggedIn){
+        listOf("Log Out")
     }else{
-        menuList = listOf("Log in/Register")
+        listOf("Log in", "Register")
     }
 
     Column(
@@ -62,7 +60,12 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
                     onDismissRequest = { profileExpanded = false }
                 ) {
                     menuList.forEach {
-                        DropdownMenuItem( onClick = {if(it == "Log in/Register"){onLoginRegisterClicked()}else{authViewModel.signOut()} },
+                        DropdownMenuItem( onClick = {
+                            if(it == "Log in"|| it == "Register"){
+                                onLoginRegisterClicked(it)
+                            }else{
+                                authViewModel.signOut()
+                            } },
                             text = {Text(text=it)})
                     }
                 }
@@ -70,6 +73,8 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
         }
     }
 }
+
+
 
 // Navbar Composable
 @Composable
