@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import android.os.Bundle
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,7 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.compose.AppTheme
-
+import com.gruppe7.wanderly.MainLayout
 
 
 @Composable

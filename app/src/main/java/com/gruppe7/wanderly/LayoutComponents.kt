@@ -62,7 +62,7 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: () -> Unit) {
                     onDismissRequest = { profileExpanded = false }
                 ) {
                     menuList.forEach {
-                        DropdownMenuItem( onClick = {if(it == "Log in/Register"){onLoginRegisterClicked()} },
+                        DropdownMenuItem( onClick = {if(it == "Log in/Register"){onLoginRegisterClicked()}else{authViewModel.signOut()} },
                             text = {Text(text=it)})
                     }
                 }

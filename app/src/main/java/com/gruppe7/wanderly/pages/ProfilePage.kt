@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.AppTheme
+import com.gruppe7.wanderly.MainLayout
 
 @Composable
 fun ProfilePage() {

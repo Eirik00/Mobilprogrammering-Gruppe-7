@@ -2,32 +2,41 @@ package com.gruppe7.wanderly
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.firebase.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 
 class AuthViewModel : ViewModel() {
+    private val _firebaseAuth = MutableStateFlow(FirebaseAuth.getInstance())
+    val firebaseAuth: StateFlow<FirebaseAuth> = _firebaseAuth
+
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> get() = _isLoggedIn
 
-    fun login(email: String, password: String): Boolean {
-        var result = false
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password).addOnCompleteListener()
-        {
-            task -> if (task.isSuccessful) {
+    private val _user = MutableStateFlow<FirebaseUser?>(null)
+    val user: StateFlow<FirebaseUser?> = _user
+
+    init {
+        _firebaseAuth.value.addAuthStateListener { user ->
+            _isLoggedIn.value = user != null
+            _user.value = user.currentUser
+        }
+    }
+
+    fun login(email: String, password: String) {
+        _firebaseAuth.value.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener() { task -> if (task.isSuccessful) {
                 Log.d("TAG", "loginUserWithEmail:Success")
-                result=true
-                _isLoggedIn.value = true
             }else{
                 Log.w("TAG", "loginUserWithEmail:failure", task.exception)
             }
         }
-        return result
     }
 
-    fun register(email: String, password: String): Boolean {
-        var result = false
-        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password).addOnCompleteListener()
+    fun register(email: String, password: String){
+        _firebaseAuth.value.createUserWithEmailAndPassword(email, password).addOnCompleteListener()
         {
             task -> if (task.isSuccessful) {
                     Log.d("TAG", "createUserWithEmail:Success")
@@ -39,11 +48,13 @@ class AuthViewModel : ViewModel() {
                             Log.w("TAG", "sendEmailVerification: failure", task.exception)
                         }
                     }
-                    result=true
                 }else{
                     Log.w("TAG", "createUserWithEmail:failure", task.exception)
             }
         }
-        return result
+    }
+
+    fun signOut() {
+        _firebaseAuth.value.signOut()
     }
 }

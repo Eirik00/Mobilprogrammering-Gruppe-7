@@ -2,14 +2,14 @@ package com.gruppe7.wanderly
 
 import com.google.firebase.firestore.GeoPoint
 
-class TripObject {
-    val name: String = ""
-    val type: String = ""
-    val description: String = ""
-    val lengthInKm: Double = 0.0
-    val minutesToWalkByFoot: Int = 0
-    val startPoint: GeoPoint? = null
-    val endPoint: GeoPoint? = null
-    val whatToBring: List<String> = emptyList()
+data class TripObject(
+    val name: String,
+    val type: String,
+    val description: String,
+    val lengthInKm: Double,
+    val minutesToWalkByFoot: Int,
+    val startPoint: GeoPoint,
+    val endPoint: GeoPoint,
+    val packingList: List<String> = emptyList(),
     val images: List<String> = emptyList()
-}
+)

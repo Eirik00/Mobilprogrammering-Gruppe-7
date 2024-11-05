@@ -15,6 +15,11 @@ import com.example.compose.AppTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.FirebaseApp
+import com.gruppe7.wanderly.pages.LandingPage
+import com.gruppe7.wanderly.pages.MapPage
+import com.gruppe7.wanderly.pages.ProfilePage
+import com.gruppe7.wanderly.pages.SettingsPage
+import com.gruppe7.wanderly.pages.TripPage
 
 
 class MainActivity : ComponentActivity() {

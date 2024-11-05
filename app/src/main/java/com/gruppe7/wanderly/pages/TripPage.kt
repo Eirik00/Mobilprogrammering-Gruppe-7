@@ -1,18 +1,31 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.firestore.GeoPoint
+import com.gruppe7.wanderly.TripObject
+import okio.IOException
+import java.util.Locale
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun TripPage() {
@@ -20,7 +33,7 @@ fun TripPage() {
     var showPopularTripsPage by remember { mutableStateOf(false) }
     var showFindMoreTripsPage by remember { mutableStateOf(false) }
     var showSearchPage by remember { mutableStateOf(false) }
-    var selectedTrip by remember { mutableStateOf<Trip?>(null) }
+    var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     var searchQuery by remember { mutableStateOf("") }
 
     when {
@@ -40,12 +53,12 @@ fun TripPage() {
             Scaffold(
                 floatingActionButton = { AddTripButton { showCreateTripPage = true } }
             ) { padding ->
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp)
-                ) {
+                        .verticalScroll(scrollState)
+                        .fillMaxHeight()
+                        .padding(padding)) {
                     Spacer(modifier = Modifier.height(8.dp))
                     SearchSection{ searchText ->
                         searchQuery = searchText
@@ -69,16 +82,6 @@ fun TripPage() {
         )
     }
 }
-
-data class Trip(
-    val name: String,
-    val type: String,
-    val start: GeoPoint,
-    val description: String,
-    val packingList: String,
-    val endPoint: GeoPoint,
-    val imageUrl: String
-)
 
 @Composable
 fun SearchSection(navigateToSearchPage: (String) -> Unit) {
@@ -109,7 +112,7 @@ fun SearchSection(navigateToSearchPage: (String) -> Unit) {
 
 @Composable
 fun TripSections(
-    onTripClick: (Trip) -> Unit,
+    onTripClick: (TripObject) -> Unit,
     navigateToPopularTrips: () -> Unit,
     navigateToFindMoreTrips: () -> Unit
 ) {
@@ -147,35 +150,102 @@ fun TripSections(
         Spacer(modifier = Modifier.height(8.dp))
 
         val trips = listOf(
-            Trip(
+            TripObject(
                 name = "Midgard vikingsenter - 1 day",
                 type = "Historical",
-                start = GeoPoint(59.3870247516921, 10.466289217259918),
+                startPoint = GeoPoint(59.3868641793198, 10.464558706166349),
                 description = "Explore Viking history with a full day at Midgard.",
-                packingList = "Camera, Water Bottle, Snacks",
+                packingList = listOf<String>("Camera", "Water Bottle", "Snacks"),
                 endPoint = GeoPoint(59.30765675697069, 11.087157826950184),
-                imageUrl = "https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"
+                images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
+                lengthInKm = 20.0,
+                minutesToWalkByFoot = 2,
             ),
-            Trip(
+            TripObject(
                 name = "Vansjø - 3 days",
                 type = "Adventure",
-                start = GeoPoint(59.354477808278475, 10.923720027315635),
+                startPoint = GeoPoint(59.354477808278475, 10.923720027315635),
                 description = "Enjoy scenic views and outdoor activities over three days.",
-                packingList = "Tent, Sleeping Bag, Food Supplies",
+                packingList = listOf<String>("Camera", "Water Bottle", "Snacks"),
                 endPoint = GeoPoint(59.444123, 10.694452),
-                imageUrl = ""
+                images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
+                lengthInKm = 20.0,
+                minutesToWalkByFoot = 2,
             )
         )
 
         trips.forEach { trip ->
-            SavedTripCard(trip = TripObject(), onClick = { onTripClick(trip) })
+            SavedTripCard(trip = trip, onClick = { onTripClick(trip) })
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private suspend fun newGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
+    return try {
+        suspendCoroutine { continuation ->
+            geocoder.getFromLocation(position.latitude, position.longitude, 1, object : Geocoder.GeocodeListener {
+                override fun onGeocode(addresses: MutableList<Address>) {
+                    val address = addresses.firstOrNull()?.let { address ->
+                        val subAdminArea = address.subAdminArea ?: ""
+                        val adminArea = address.adminArea ?: ""
+                        if (subAdminArea.isNotEmpty() && adminArea.isNotEmpty()) {
+                            "$subAdminArea, $adminArea"
+                        } else {
+                            subAdminArea + adminArea
+                        }
+                    } ?: "Unknown"
+                    continuation.resume(address)
+                }
+
+                override fun onError(errorMessage: String?) {
+                    continuation.resume("Unknown")
+                }
+            })
+        }
+    } catch (e: IOException) {
+        "Unknown"
+    }
+}
+
+private fun oldGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
+    return try {
+        val addresses = geocoder.getFromLocation(
+            position.latitude,
+            position.longitude,
+            1
+        )
+        addresses?.firstOrNull()?.getAddressLine(0) ?: "unknown"
+    }catch (e: IOException){
+        "unknown"
+    }
+}
+
 @Composable
 fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
+
+    var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
+    var endAddress by remember(trip.endPoint) { mutableStateOf(("Loading...")) }
+
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }else{
+            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }
+    }
+
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }else{
+            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,14 +261,14 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
             Text(trip.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text("Type: ${trip.type}", fontSize = 14.sp)
             Text("Description: ${trip.description}")
-            Text("Start point: ${trip.startPoint}, ${trip.startPoint}", fontSize = 14.sp)
-            Text("Length: ${trip.lengthInKm}")
+            Text("Start point: $startAddress, $endAddress", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm} Km")
         }
     }
 }
 
 @Composable
-fun SavedTripDialog(trip: Trip, onDismiss: () -> Unit) {
+fun SavedTripDialog(trip: TripObject, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -207,7 +277,7 @@ fun SavedTripDialog(trip: Trip, onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Type: ${trip.type}", fontSize = 16.sp)
-                Text("Start: ${trip.start.latitude}, ${trip.start.longitude}", fontSize = 16.sp)
+                Text("Start: ${trip.startPoint.latitude}, ${trip.startPoint.longitude}", fontSize = 16.sp)
                 Text("Description: ${trip.description}", fontSize = 16.sp)
                 Text("Packing List: ${trip.packingList}", fontSize = 16.sp)
                 Text("Destination: ${trip.endPoint.latitude}, ${trip.endPoint.longitude}", fontSize = 16.sp)

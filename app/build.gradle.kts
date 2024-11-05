@@ -78,6 +78,8 @@ dependencies {
 
     implementation(libs.play.services.base)
 
+    implementation(libs.play.services.location)
+
     implementation(libs.play.services.maps)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.firebase.firestore.ktx)

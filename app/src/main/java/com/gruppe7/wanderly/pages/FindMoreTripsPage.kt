@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight

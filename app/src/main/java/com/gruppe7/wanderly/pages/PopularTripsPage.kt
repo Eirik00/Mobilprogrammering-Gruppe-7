@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import android.util.Log
 import androidx.compose.foundation.background

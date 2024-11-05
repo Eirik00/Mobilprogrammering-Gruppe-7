@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import android.content.Context
 import android.widget.Toast

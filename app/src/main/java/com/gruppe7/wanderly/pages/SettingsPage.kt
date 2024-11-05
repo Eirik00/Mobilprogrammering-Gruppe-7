@@ -1,4 +1,4 @@
-package com.gruppe7.wanderly
+package com.gruppe7.wanderly.pages
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.gruppe7.wanderly.BuildConfig
+import com.gruppe7.wanderly.SettingsViewModel
 
 const val AppVersion = BuildConfig.VERSION_NAME
 
