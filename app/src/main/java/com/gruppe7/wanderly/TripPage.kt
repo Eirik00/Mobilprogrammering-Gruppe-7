@@ -168,14 +168,14 @@ fun TripSections(
         )
 
         trips.forEach { trip ->
-            SavedTripCard(trip = trip, onClick = { onTripClick(trip) })
+            SavedTripCard(trip = TripObject(), onClick = { onTripClick(trip) })
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun SavedTripCard(trip: Trip, onClick: () -> Unit) {
+fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -190,7 +190,9 @@ fun SavedTripCard(trip: Trip, onClick: () -> Unit) {
         ) {
             Text(trip.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text("Type: ${trip.type}", fontSize = 14.sp)
-            Text("Destination: ${trip.endPoint.latitude}, ${trip.endPoint.longitude}", fontSize = 14.sp)
+            Text("Description: ${trip.description}")
+            Text("Start point: ${trip.startPoint}, ${trip.startPoint}", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm}")
         }
     }
 }

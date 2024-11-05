@@ -4,6 +4,7 @@ import com.google.firebase.firestore.GeoPoint
 
 class TripObject {
     val name: String = ""
+    val type: String = ""
     val description: String = ""
     val lengthInKm: Double = 0.0
     val minutesToWalkByFoot: Int = 0
