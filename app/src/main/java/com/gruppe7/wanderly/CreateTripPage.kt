@@ -1,13 +1,9 @@
 package com.gruppe7.wanderly
 
 import android.content.Context
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
@@ -16,7 +12,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -24,23 +19,21 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTripPage(onBack: () -> Unit) {
     var tripName by remember { mutableStateOf("") }
     var selectedTripType by remember { mutableStateOf("") }
+    var tripStartPoint by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var packingList by remember { mutableStateOf("") }
-    var tripDestination by remember { mutableStateOf("") }
+    var tripEndPoint by remember { mutableStateOf("") }
 
     val tripTypes = listOf("Hike in nature", "City trip", "Canoe or kayak", "Climbing")
     var expanded by remember { mutableStateOf(false) }
 
-    // Context for showing a toast and accessing SharedPreferences
     val context = LocalContext.current
 
     Scaffold(
@@ -49,7 +42,7 @@ fun CreateTripPage(onBack: () -> Unit) {
                 title = { Text("Create new trip") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -102,6 +95,15 @@ fun CreateTripPage(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
+                value = tripStartPoint,
+                onValueChange = { tripStartPoint = it },
+                label = { Text("Start point") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
@@ -120,9 +122,9 @@ fun CreateTripPage(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
-                value = tripDestination,
-                onValueChange = { tripDestination = it },
-                label = { Text("Trip destination") },
+                value = tripEndPoint,
+                onValueChange = { tripEndPoint = it },
+                label = { Text("Trip end point") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -134,9 +136,10 @@ fun CreateTripPage(onBack: () -> Unit) {
                         context = context,
                         tripName = tripName,
                         tripType = selectedTripType,
+                        tripStartPoint = tripStartPoint,
                         description = description,
                         packingList = packingList,
-                        tripDestination = tripDestination
+                        tripEndPoint = tripEndPoint
                     )
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -151,18 +154,20 @@ fun saveTrip(
     context: Context,
     tripName: String,
     tripType: String,
+    tripStartPoint: String,
     description: String,
     packingList: String,
-    tripDestination: String
+    tripEndPoint: String
 ) {
     val sharedPreferences = context.getSharedPreferences("Trips", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
 
     editor.putString("tripName", tripName)
     editor.putString("tripType", tripType)
+    editor.putString("tripStartPoint", tripStartPoint)
     editor.putString("description", description)
     editor.putString("packingList", packingList)
-    editor.putString("tripDestination", tripDestination)
+    editor.putString("tripEndPoint", tripEndPoint)
     editor.apply()
 
     Toast.makeText(context, "Trip saved!", Toast.LENGTH_SHORT).show()
