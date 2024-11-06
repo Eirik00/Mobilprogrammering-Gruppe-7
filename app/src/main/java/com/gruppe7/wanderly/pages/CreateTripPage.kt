@@ -5,17 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,14 +15,14 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CreateTripPage(onBack: () -> Unit) {
     var tripName by remember { mutableStateOf("") }
-    var selectedTripType by remember { mutableStateOf("") }
+    var tripType by remember { mutableStateOf("") }
     var tripStartPoint by remember { mutableStateOf("") }
+    var tripEndPoint by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var packingList by remember { mutableStateOf("") }
-    var tripEndPoint by remember { mutableStateOf("") }
 
-    val tripTypes = listOf("Hike in nature", "City trip", "Canoe or kayak", "Climbing")
-    var expanded by remember { mutableStateOf(false) }
+    var lengthInKm by remember { mutableStateOf<Double?>(null) }
+    var minutesToWalkByFoot by remember { mutableStateOf<Int?>(null) }
 
     val context = LocalContext.current
 
@@ -54,7 +44,6 @@ fun CreateTripPage(onBack: () -> Unit) {
                 .padding(padding)
                 .padding(16.dp)
         ) {
-
             TextField(
                 value = tripName,
                 onValueChange = { tripName = it },
@@ -64,40 +53,28 @@ fun CreateTripPage(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    value = selectedTripType,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                    label = { Text("Trip type") }
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    tripTypes.forEach { tripType ->
-                        DropdownMenuItem(
-                            text = { Text(tripType) },
-                            onClick = {
-                                selectedTripType = tripType
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
+            TextField(
+                value = tripType,
+                onValueChange = { tripType = it },
+                label = { Text("Trip type") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
                 value = tripStartPoint,
                 onValueChange = { tripStartPoint = it },
-                label = { Text("Start point") },
+                label = { Text("Start destination") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+                value = tripEndPoint,
+                onValueChange = { tripEndPoint = it },
+                label = { Text("End destination") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -122,25 +99,44 @@ fun CreateTripPage(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
-                value = tripEndPoint,
-                onValueChange = { tripEndPoint = it },
-                label = { Text("Trip end point") },
-                modifier = Modifier.fillMaxWidth()
+                value = lengthInKm?.toString() ?: "",
+                onValueChange = { input ->
+                    lengthInKm = input.toDoubleOrNull()
+                },
+                label = { Text("Length in km") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(
+                value = minutesToWalkByFoot?.toString() ?: "",
+                onValueChange = { input ->
+                    minutesToWalkByFoot = input.toIntOrNull()
+                },
+                label = { Text("Minutes to walk by foot") },
+                modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    saveTrip(
-                        context = context,
-                        tripName = tripName,
-                        tripType = selectedTripType,
-                        tripStartPoint = tripStartPoint,
-                        description = description,
-                        packingList = packingList,
-                        tripEndPoint = tripEndPoint
-                    )
+                    if (lengthInKm != null && minutesToWalkByFoot != null) {
+                        saveTrip(
+                            context = context,
+                            tripName = tripName,
+                            tripType = tripType,
+                            tripStartPoint = tripStartPoint,
+                            description = description,
+                            packingList = packingList,
+                            tripEndPoint = tripEndPoint,
+                            lengthInKm = lengthInKm ?: 0.0,
+                            minutesToWalkByFoot = minutesToWalkByFoot ?: 0
+                        )
+                    } else {
+                        Toast.makeText(context, "Please enter valid data", Toast.LENGTH_SHORT).show()
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -157,7 +153,9 @@ fun saveTrip(
     tripStartPoint: String,
     description: String,
     packingList: String,
-    tripEndPoint: String
+    tripEndPoint: String,
+    lengthInKm: Double,
+    minutesToWalkByFoot: Int
 ) {
     val sharedPreferences = context.getSharedPreferences("Trips", Context.MODE_PRIVATE)
     val editor = sharedPreferences.edit()
@@ -168,6 +166,8 @@ fun saveTrip(
     editor.putString("description", description)
     editor.putString("packingList", packingList)
     editor.putString("tripEndPoint", tripEndPoint)
+    editor.putFloat("lengthInKm", lengthInKm.toFloat())
+    editor.putInt("minutesToWalkByFoot", minutesToWalkByFoot)
     editor.apply()
 
     Toast.makeText(context, "Trip saved!", Toast.LENGTH_SHORT).show()
