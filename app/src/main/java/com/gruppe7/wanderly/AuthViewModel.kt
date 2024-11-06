@@ -1,12 +1,21 @@
 package com.gruppe7.wanderly
 
 import android.util.Log
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 data class UserData(
     val username: String = "",
@@ -39,8 +48,15 @@ class AuthViewModel : ViewModel() {
         var result = false
         _firebaseAuth.value.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener() { task -> if (task.isSuccessful) {
-                Log.d("TAG", "loginUserWithEmail:Success")
-                result = true
+                Log.d("TAG", "loginUserWithEmail:Success ${task.result?.user?.uid}")
+                viewModelScope.launch {
+                    val userData = withContext(Dispatchers.IO) {
+                        fetchUserData(task.result?.user?.uid ?: return@withContext null)
+                    }
+                    _userData.value = userData ?: UserData()
+                    Log.d("STATE","USERNAME: ${_userData.value.username}")
+                    result = true
+                }
             }else{
                 Log.w("TAG", "loginUserWithEmail:failure", task.exception)
             }
@@ -66,6 +82,11 @@ class AuthViewModel : ViewModel() {
                     userRef.set(userData)
                         .addOnSuccessListener {
                             Log.d("TAG", "User created successfully")
+                            _userData.value = UserData(
+                                username = userData["username"] as String,
+                                email = userData["email"] as String,
+                                uuid = userData["UUID"] as String
+                            )
                             result = true
                         }
                         .addOnFailureListener { exception ->
@@ -88,5 +109,22 @@ class AuthViewModel : ViewModel() {
 
     fun signOut() {
         _firebaseAuth.value.signOut()
+    }
+
+    private suspend fun fetchUserData(userId: String): UserData? {
+        return try {
+            val snapshot: QuerySnapshot = FirebaseFirestore.getInstance()
+                .collection("users")
+                .whereEqualTo("UUID", userId)
+                .limit(1)
+                .get()
+                .await()
+
+            val document: DocumentSnapshot = snapshot.documents.firstOrNull() ?: return null
+            document.toObject(UserData::class.java)
+        }catch (e: Exception) {
+            Log.e("ERROR", "Error fetching user data for userId: $userId", e)
+            null
+        }
     }
 }

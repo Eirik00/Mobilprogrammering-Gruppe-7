@@ -27,6 +27,8 @@ import com.gruppe7.wanderly.MainLayout
 
 @Composable
 fun ProfilePage(authViewModel: AuthViewModel) {
+    val userInfo = authViewModel.userData.collectAsState().value
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,7 +51,18 @@ fun ProfilePage(authViewModel: AuthViewModel) {
 
         // Name
         Text(
-            text = "authViewModel.user.",
+            text = userInfo.username,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Email
+        Text(
+            text = userInfo.email,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
