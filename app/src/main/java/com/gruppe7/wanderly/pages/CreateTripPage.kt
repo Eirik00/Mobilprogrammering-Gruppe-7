@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CreateTripPage(onBack: () -> Unit) {
     var tripName by remember { mutableStateOf("") }
-    var tripType by remember { mutableStateOf("") }
     var tripStartPoint by remember { mutableStateOf("") }
     var tripEndPoint by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -48,15 +47,6 @@ fun CreateTripPage(onBack: () -> Unit) {
                 value = tripName,
                 onValueChange = { tripName = it },
                 label = { Text("Trip name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextField(
-                value = tripType,
-                onValueChange = { tripType = it },
-                label = { Text("Trip type") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -126,7 +116,6 @@ fun CreateTripPage(onBack: () -> Unit) {
                         saveTrip(
                             context = context,
                             tripName = tripName,
-                            tripType = tripType,
                             tripStartPoint = tripStartPoint,
                             description = description,
                             packingList = packingList,
@@ -149,7 +138,6 @@ fun CreateTripPage(onBack: () -> Unit) {
 fun saveTrip(
     context: Context,
     tripName: String,
-    tripType: String,
     tripStartPoint: String,
     description: String,
     packingList: String,
@@ -161,7 +149,6 @@ fun saveTrip(
     val editor = sharedPreferences.edit()
 
     editor.putString("tripName", tripName)
-    editor.putString("tripType", tripType)
     editor.putString("tripStartPoint", tripStartPoint)
     editor.putString("description", description)
     editor.putString("packingList", packingList)

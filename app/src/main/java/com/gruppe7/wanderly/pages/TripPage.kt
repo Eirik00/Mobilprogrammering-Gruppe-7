@@ -44,7 +44,7 @@ fun TripPage(tripsViewModel: TripsViewModel) {
             PopularTripsPage(onBack = { showPopularTripsPage = false })
         }
         showFindMoreTripsPage -> {
-            FindMoreTripsPage(onBack = { showFindMoreTripsPage = false })
+            FindMoreTripsPage(tripsViewModel = tripsViewModel, onBack = { showFindMoreTripsPage = false })
         }
         showSearchPage -> {
             SearchPage(tripsViewModel, searchQuery) { showSearchPage = false }
@@ -103,6 +103,7 @@ fun SearchSection(navigateToSearchPage: (String) -> Unit) {
 
         Button(
             onClick = { navigateToSearchPage(searchText) },
+            enabled = searchText.isNotEmpty(),
             modifier = Modifier.height(56.dp)
         ) {
             Text("Search")
@@ -182,7 +183,7 @@ fun TripSections(
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-private suspend fun newGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
+suspend fun newGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
     return try {
         suspendCoroutine { continuation ->
             geocoder.getFromLocation(position.latitude, position.longitude, 1, object : Geocoder.GeocodeListener {
@@ -209,7 +210,7 @@ private suspend fun newGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPo
     }
 }
 
-private fun oldGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
+fun oldGetAdressFromGeoPoint(geocoder: Geocoder, position: GeoPoint): String {
     return try {
         val addresses = geocoder.getFromLocation(
             position.latitude,
@@ -259,7 +260,6 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(trip.name, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text("Type: ${trip.type}", fontSize = 14.sp)
             Text("Description: ${trip.description}")
             Text("Start point: $startAddress, $endAddress", fontSize = 14.sp)
             Text("Length: ${trip.lengthInKm} Km")
@@ -276,7 +276,6 @@ fun SavedTripDialog(trip: TripObject, onDismiss: () -> Unit) {
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Type: ${trip.type}", fontSize = 16.sp)
                 Text("Start: ${trip.startPoint.latitude}, ${trip.startPoint.longitude}", fontSize = 16.sp)
                 Text("Description: ${trip.description}", fontSize = 16.sp)
                 Text("Packing List: ${trip.packingList}", fontSize = 16.sp)
