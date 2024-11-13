@@ -19,7 +19,10 @@ data class TripObject(
     val startPoint: GeoPoint = GeoPoint(0.0, 0.0),
     val endPoint: GeoPoint = GeoPoint(0.0, 0.0),
     val packingList: List<String> = emptyList(),
-    val images: List<String> = emptyList()
+    val images: List<String> = emptyList(),
+    val waypoints: List<GeoPoint>? = emptyList(),
+    var clickCount: Int = 0,
+    var id: String = ""
 )
 
 sealed class TripsFetchState {
@@ -67,12 +70,13 @@ class TripsViewModel : ViewModel() {
         }
     }
 
-    fun refreshTrips(){
-        fetchTrips()
-    }
-
-    fun getTripByName(name: String): TripObject? {
-        return _trips.value.find { it.name == name }
+    fun loadTrips() {
+        FirebaseFirestore.getInstance().collection("trips")
+            .get()
+            .addOnSuccessListener { result ->
+                val tripsList = result.map { document -> document.toObject(TripObject::class.java) }
+                _trips.value = tripsList
+            }
     }
 }
 

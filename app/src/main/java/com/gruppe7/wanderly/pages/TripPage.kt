@@ -28,7 +28,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @Composable
-fun TripPage(tripsViewModel: TripsViewModel) {
+fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     var showCreateTripPage by remember { mutableStateOf(false) }
     var showPopularTripsPage by remember { mutableStateOf(false) }
     var showFindMoreTripsPage by remember { mutableStateOf(false) }
@@ -38,7 +38,7 @@ fun TripPage(tripsViewModel: TripsViewModel) {
 
     when {
         showCreateTripPage -> {
-            CreateTripPage(onBack = { showCreateTripPage = false })
+            CreateTripPage(onBack = { showCreateTripPage = false }, userId = userId)
         }
         showPopularTripsPage -> {
             PopularTripsPage(onBack = { showPopularTripsPage = false })
@@ -154,13 +154,14 @@ fun TripSections(
             TripObject(
                 name = "Midgard vikingsenter - 1 day",
                 type = "Historical",
-                startPoint = GeoPoint(59.3868641793198, 10.464558706166349),
+                startPoint = GeoPoint(59.3868641793198, 59.3868641793198),
                 description = "Explore Viking history with a full day at Midgard.",
                 packingList = listOf<String>("Camera", "Water Bottle", "Snacks"),
                 endPoint = GeoPoint(59.30765675697069, 11.087157826950184),
                 images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
                 minutesToWalkByFoot = 2,
+                waypoints = listOf<GeoPoint>()
             ),
             TripObject(
                 name = "Vansjø - 3 days",
@@ -172,6 +173,7 @@ fun TripSections(
                 images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
                 minutesToWalkByFoot = 2,
+                waypoints = listOf()
             )
         )
 

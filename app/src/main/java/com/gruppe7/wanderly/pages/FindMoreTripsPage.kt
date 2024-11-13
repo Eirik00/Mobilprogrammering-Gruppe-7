@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
 import java.util.Locale
@@ -29,6 +30,10 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
+    LaunchedEffect(Unit) {
+        tripsViewModel.loadTrips()
+    }
+
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
 
@@ -71,6 +76,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
 fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
+    val db = FirebaseFirestore.getInstance()
 
     var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
     var endAddress by remember(trip.endPoint) { mutableStateOf("Loading...") }
@@ -95,7 +101,10 @@ fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .clickable{
+                incrementClickCount(trip, db)
+                onClick()
+            },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -110,6 +119,17 @@ fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
             Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
         }
     }
+}
+
+fun incrementClickCount(trip: TripObject, db: FirebaseFirestore) {
+    val newClickCount = trip.clickCount + 1
+
+    db.collection("trips")
+        .document(trip.id) // Make sure each trip has a unique document ID
+        .update("clickCount", newClickCount)
+        .addOnSuccessListener {
+            trip.clickCount = newClickCount
+        }
 }
 
 @Composable

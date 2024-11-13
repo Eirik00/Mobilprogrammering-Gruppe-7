@@ -107,4 +107,6 @@ dependencies {
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.0-rc02")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.0-rc02")
+
+    implementation("com.google.firebase:firebase-firestore-ktx:24.5.0")
 }
