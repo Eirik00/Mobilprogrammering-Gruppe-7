@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -44,8 +45,26 @@ fun LandingPage(paddingValues: PaddingValues) {
     Column(
         modifier = Modifier
             .verticalScroll(scrollState)
-            .fillMaxHeight()
+            .fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Text(
+            text = "Welcome to Wanderly!",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(16.dp)
+
+        )
+
+        Text(
+            text = "What will your next trip be? Here are some currently popular trips:",
+            fontSize = 16.sp,
+            modifier = Modifier
+                .padding(16.dp)
+        )
+
         // Current Trips
         Column() {
             Box(
