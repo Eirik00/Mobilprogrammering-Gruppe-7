@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -58,7 +57,9 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
                 Text("No trips found for \"$searchText\"", modifier = Modifier.padding(16.dp))
             } else {
                 filteredTrips.forEach { trip ->
-                    SavedTripCard(trip = trip, onClick = { selectedTrip = trip })
+                    SavedTripCard(trip = trip, onClick = {
+                        selectedTrip = trip
+                    })
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -106,7 +107,7 @@ fun SearchDialog(trip: TripObject, onDismiss: () -> Unit) {
                 Text("End point: $endAddress", fontSize = 14.sp)
                 Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
                 Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-                Text("Minutes to walk by foot: ${trip.minutesToWalkByFoot}", fontSize = 14.sp)
+                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
             }
         },
         confirmButton = {

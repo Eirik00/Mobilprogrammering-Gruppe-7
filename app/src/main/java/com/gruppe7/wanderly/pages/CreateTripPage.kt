@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+
+enum class TransportationMode(val displayName: String) {
+    CAR("Car"),
+    BIKE("Bike"),
+    WALK("Walk")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,9 +33,10 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
     var description by remember { mutableStateOf("") }
     var packingList by remember { mutableStateOf(mutableListOf<String>()) }
     var lengthInKm by remember { mutableStateOf<Double?>(null) }
-    var minutesToWalkByFoot by remember { mutableStateOf<Int?>(null) }
+    var tripDurationInMinutes by remember { mutableStateOf<Int?>(null) }
     var waypoints by remember { mutableStateOf(mutableListOf<String>()) }
     var images by remember { mutableStateOf(mutableListOf<String>()) }
+    var selectedMode by remember { mutableStateOf(TransportationMode.WALK) }
 
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -61,7 +69,6 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Start Point Latitude and Longitude
             TextField(
                 value = tripStartLatitude,
                 onValueChange = { tripStartLatitude = it },
@@ -80,7 +87,6 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // End Point Latitude and Longitude
             TextField(
                 value = tripEndLatitude,
                 onValueChange = { tripEndLatitude = it },
@@ -119,6 +125,44 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            var expanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    value = selectedMode.displayName,
+                    onValueChange = {},
+                    label = { Text("Mode of Transport") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    TransportationMode.values().forEach { mode ->
+                        DropdownMenuItem(
+                            text = { Text(mode.displayName) },
+                            onClick = {
+                                selectedMode = mode
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             TextField(
                 value = lengthInKm?.toString() ?: "",
                 onValueChange = { input ->
@@ -131,11 +175,11 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
-                value = minutesToWalkByFoot?.toString() ?: "",
+                value = tripDurationInMinutes?.toString() ?: "",
                 onValueChange = { input ->
-                    minutesToWalkByFoot = input.toIntOrNull()
+                    tripDurationInMinutes = input.toIntOrNull()
                 },
-                label = { Text("Minutes to walk by foot") },
+                label = { Text("Trip duration in minutes") },
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -144,12 +188,11 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
             TextField(
                 value = waypoints.joinToString(", "),
                 onValueChange = { input ->
-                    waypoints = input.split(", ").toMutableList()
+                    waypoints = input.split(", ").map { it.trim() }.toMutableList()
                 },
-                label = { Text("Waypoints (comma-separated)") },
+                label = { Text("Waypoints (format: lat,lng)") },
                 modifier = Modifier.fillMaxWidth()
             )
-
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -171,7 +214,18 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
                     val endLat = tripEndLatitude.toDoubleOrNull()
                     val endLng = tripEndLongitude.toDoubleOrNull()
 
-                    if (lengthInKm != null && minutesToWalkByFoot != null) {
+                    val waypointGeoPoints = waypoints.mapNotNull { waypoint ->
+                        val parts = waypoint.split(",")
+                        if (parts.size == 2) {
+                            val lat = parts[0].toDoubleOrNull()
+                            val lng = parts[1].toDoubleOrNull()
+                            if (lat != null && lng != null) GeoPoint(lat, lng) else null
+                        } else {
+                            null
+                        }
+                    }
+
+                    if (lengthInKm != null && tripDurationInMinutes != null) {
                         saveTrip(
                             context = context,
                             tripName = tripName,
@@ -180,10 +234,11 @@ fun CreateTripPage(onBack: () -> Unit, userId: String) {
                             packingList = packingList,
                             tripEndPoint = GeoPoint(endLat ?: 0.0, endLng ?: 0.0),
                             lengthInKm = lengthInKm ?: 0.0,
-                            minutesToWalkByFoot = minutesToWalkByFoot ?: 0,
-                            waypoints = waypoints,
+                            tripDurationInMinutes = tripDurationInMinutes ?: 0,
+                            waypoints = waypointGeoPoints,
                             images = images,
-                            ownerID = userId
+                            ownerID = userId,
+                            transportationMode = selectedMode
                         )
                     } else {
                         Toast.makeText(context, "Please enter valid data", Toast.LENGTH_SHORT).show()
@@ -205,26 +260,29 @@ fun saveTrip(
     packingList: List<String>,
     tripEndPoint: GeoPoint,
     lengthInKm: Double,
-    minutesToWalkByFoot: Int,
-    waypoints: List<String>,
+    tripDurationInMinutes: Int,
+    waypoints: List<GeoPoint>,
     images: List<String>,
-    ownerID: String
+    ownerID: String,
+    transportationMode: TransportationMode
 ) {
     val db = FirebaseFirestore.getInstance()
 
-    val sharedPreferences = context.getSharedPreferences("Trips", Context.MODE_PRIVATE)
-    val editor = sharedPreferences.edit()
-    editor.putString("name", tripName)
+   // val sharedPreferences = context.getSharedPreferences("Trips", Context.MODE_PRIVATE)
+    //val editor = sharedPreferences.edit()
+    //editor.putString("name", tripName)
     //editor.putString("startPoint", tripStartPoint)
-    editor.putString("description", description)
+   // editor.putString("description", description)
     //editor.putString("packingList", packingList)
     //editor.putString("endPoint", tripEndPoint)
-    editor.putFloat("lengthInKm", lengthInKm.toFloat())
-    editor.putInt("minutesToWalkByFoot", minutesToWalkByFoot)
+   // editor.putFloat("lengthInKm", lengthInKm.toFloat())
+   // editor.putInt("tripDurationInMinutes", tripDurationInMinutes)
     //editor.putString("waypoints", waypoints)
-    editor.apply()
+    //editor.putString("transportationMode", transportationMode.name)
 
-    Toast.makeText(context, "Trip saved locally!", Toast.LENGTH_SHORT).show()
+   // editor.apply()
+
+   // Toast.makeText(context, "Trip saved locally!", Toast.LENGTH_SHORT).show()
 
 
     val tripData = hashMapOf(
@@ -234,16 +292,25 @@ fun saveTrip(
         "packingList" to packingList,
         "endPoint" to tripEndPoint,
         "lengthInKm" to lengthInKm,
-        "minutesToWalkByFoot" to minutesToWalkByFoot,
+        "tripDurationInMinutes" to tripDurationInMinutes,
         "waypoints" to waypoints,
         "images" to images,
-        "ownerID" to ownerID
+        "ownerID" to ownerID,
+        "transportationMode" to transportationMode.name
     )
 
     db.collection("trips")
         .add(tripData)
-        .addOnSuccessListener {
-            Toast.makeText(context, "Trip saved to Firebase!", Toast.LENGTH_SHORT).show()
+        .addOnSuccessListener { documentReference ->
+            val generatedId = documentReference.id
+            db.collection("trips").document(generatedId)
+                .update("id", generatedId)
+                .addOnSuccessListener {
+                    Toast.makeText(context, "Trip saved to Firebase with ID!", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(context, "Error updating trip ID: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
         .addOnFailureListener { e ->
             Toast.makeText(context, "Error saving trip: ${e.message}", Toast.LENGTH_SHORT).show()

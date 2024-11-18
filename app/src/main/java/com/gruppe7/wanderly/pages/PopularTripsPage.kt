@@ -1,7 +1,7 @@
 package com.gruppe7.wanderly.pages
 
-import android.util.Log
-import androidx.compose.foundation.background
+import android.location.Geocoder
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,20 +9,39 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.gruppe7.wanderly.TripObject
+import com.gruppe7.wanderly.TripsViewModel
+import java.util.Locale
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PopularTripsPage(onBack: () -> Unit) {
+fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val scrollState = rememberScrollState()
+    var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
+    val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
+
+    var tripsWithClicks by remember { mutableStateOf<List<TripObject>>(emptyList()) }
+
+    LaunchedEffect(allTrips) {
+        val tripsWithUpdatedClicks = allTrips.map { trip ->
+            val clickCounter = getClickCounterFromFirestore(trip.id)
+            trip.copy(clickCounter = clickCounter)
+        }
+
+        tripsWithClicks = tripsWithUpdatedClicks
+    }
+
+    val sortedTrips = tripsWithClicks.sortedByDescending { it.clickCounter }
 
     Scaffold(
         topBar = {
@@ -42,94 +61,150 @@ fun PopularTripsPage(onBack: () -> Unit) {
                 .verticalScroll(scrollState)
                 .fillMaxHeight()
         ) {
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    repeat(6) { // Create 6 PopularTripRow composables
-                        PopularTripRow("Oslo Sightseeing")
-                    }
-
-                    Button(
-                        onClick = { Log.d("State", "Popular Trips Clicked!") },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(
-                            "See More",
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSecondary
-                        )
-                    }
+            sortedTrips.forEachIndexed { index, trip ->
+                val medal = when (index) {
+                    0 -> "🥇"
+                    1 -> "🥈"
+                    2 -> "🥉"
+                    else -> ""
                 }
+                PopularTripsCard(trip = trip, medal = medal, onClick = { selectedTrip = trip })
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
+    selectedTrip?.let { trip ->
+        PopularTripDialog(trip = trip, onDismiss = { selectedTrip = null })
+    }
+}
+
+suspend fun getClickCounterFromFirestore(tripId: String): Int {
+    val db = FirebaseFirestore.getInstance()
+    val documentSnapshot = db.collection("trips")
+        .document(tripId)
+        .get()
+        .await()
+    return documentSnapshot.getLong("clickCounter")?.toInt() ?: 0
+}
+
+@Composable
+fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
+    val db = FirebaseFirestore.getInstance()
+
+    var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
+    var endAddress by remember(trip.endPoint) { mutableStateOf("Loading...") }
+
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }
+    }
+
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable {
+                db.collection("trips")
+                    .document(trip.id)
+                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+                onClick()
+            },
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+            ) {
+                Text(trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Description: ${trip.description}", fontSize = 14.sp)
+                Text("Start point: $startAddress", fontSize = 14.sp)
+                Text("End point: $endAddress", fontSize = 14.sp)
+                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+            }
+
+            if (medal.isNotEmpty()) {
+                Text(
+                    medal,
+                    fontSize = 24.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                )
             }
         }
     }
 }
 
 @Composable
-fun PopularTripRow(tripName: String) {
-    var isFavorited by remember { mutableStateOf(false) }
+fun PopularTripDialog(trip: TripObject, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
 
-    Row(
-        modifier = Modifier
-            .padding(5.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.secondary)
-            .clickable { Log.d("STATE", "$tripName Clicked!") }
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            tripName,
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.onSecondary
-        )
+    var startAddress by remember { mutableStateOf("Loading...") }
+    var endAddress by remember { mutableStateOf("Loading...") }
 
-        Icon(
-            imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-            contentDescription = "Favorite Icon",
-            tint = MaterialTheme.colorScheme.onSecondary,
-            modifier = Modifier.clickable { isFavorited = !isFavorited }
-        )
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }
     }
-}
 
-@Composable
-fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean = false) {
-    Row(
-        modifier = Modifier
-            .padding(5.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (startedBool) MaterialTheme.colorScheme.tertiary
-                else MaterialTheme.colorScheme.secondary
-            )
-            .clickable { Log.d("STATE", "$tripName Clicked!") }
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            tripName,
-            modifier = Modifier.weight(1f),
-            color = if (startedBool) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary
-        )
-        Text(
-            tripProgress,
-            modifier = Modifier.align(Alignment.CenterVertically),
-            color = if (startedBool) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary
-        )
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }
     }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Description: ${trip.description}", fontSize = 14.sp)
+                Text("Start point: $startAddress", fontSize = 14.sp)
+                Text("End point: $endAddress", fontSize = 14.sp)
+                Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Save Trip")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(16.dp)
+    )
 }

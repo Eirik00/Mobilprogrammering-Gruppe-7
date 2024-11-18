@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
@@ -41,7 +42,7 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
             CreateTripPage(onBack = { showCreateTripPage = false }, userId = userId)
         }
         showPopularTripsPage -> {
-            PopularTripsPage(onBack = { showPopularTripsPage = false })
+            PopularTripsPage(tripsViewModel = tripsViewModel, onBack = { showPopularTripsPage = false })
         }
         showFindMoreTripsPage -> {
             FindMoreTripsPage(tripsViewModel = tripsViewModel, onBack = { showFindMoreTripsPage = false })
@@ -156,23 +157,23 @@ fun TripSections(
                 type = "Historical",
                 startPoint = GeoPoint(59.3868641793198, 59.3868641793198),
                 description = "Explore Viking history with a full day at Midgard.",
-                packingList = listOf<String>("Camera", "Water Bottle", "Snacks"),
+                packingList = listOf("Camera", "Water Bottle", "Snacks"),
                 endPoint = GeoPoint(59.30765675697069, 11.087157826950184),
-                images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
+                images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
-                minutesToWalkByFoot = 2,
-                waypoints = listOf<GeoPoint>()
+                tripDurationInMinutes = 2,
+                waypoints = listOf()
             ),
             TripObject(
                 name = "Vansjø - 3 days",
                 type = "Adventure",
                 startPoint = GeoPoint(59.354477808278475, 10.923720027315635),
                 description = "Enjoy scenic views and outdoor activities over three days.",
-                packingList = listOf<String>("Camera", "Water Bottle", "Snacks"),
+                packingList = listOf("Camera", "Water Bottle", "Snacks"),
                 endPoint = GeoPoint(59.444123, 10.694452),
-                images = listOf<String>("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
+                images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
-                minutesToWalkByFoot = 2,
+                tripDurationInMinutes = 2,
                 waypoints = listOf()
             )
         )
@@ -233,6 +234,8 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
     var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
     var endAddress by remember(trip.endPoint) { mutableStateOf(("Loading...")) }
 
+    val db = FirebaseFirestore.getInstance()
+
     LaunchedEffect(trip.startPoint) {
         startAddress = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
             newGetAdressFromGeoPoint(geocoder, trip.startPoint)
@@ -253,7 +256,12 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .clickable {
+                db.collection("trips")
+                    .document(trip.id)
+                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+                onClick()
+                       },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {

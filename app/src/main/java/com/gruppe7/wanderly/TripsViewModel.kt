@@ -11,18 +11,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 data class TripObject(
+    val id: String = "",
     val name: String = "",
     val type: String = "",
     val description: String = "",
     val lengthInKm: Double = 0.0,
-    val minutesToWalkByFoot: Int = 0,
+    val tripDurationInMinutes: Int = 0,
     val startPoint: GeoPoint = GeoPoint(0.0, 0.0),
     val endPoint: GeoPoint = GeoPoint(0.0, 0.0),
     val packingList: List<String> = emptyList(),
     val images: List<String> = emptyList(),
     val waypoints: List<GeoPoint>? = emptyList(),
-    var clickCount: Int = 0,
-    var id: String = ""
+    val transportationMode: String = "",
+    val clickCounter: Int = 0
 )
 
 sealed class TripsFetchState {
@@ -74,8 +75,13 @@ class TripsViewModel : ViewModel() {
         FirebaseFirestore.getInstance().collection("trips")
             .get()
             .addOnSuccessListener { result ->
-                val tripsList = result.map { document -> document.toObject(TripObject::class.java) }
+                val tripsList = result.map { document ->
+                    document.toObject(TripObject::class.java).copy(id = document.id)
+                }
                 _trips.value = tripsList
+            }
+            .addOnFailureListener { e ->
+                Log.e("ERROR", "Error loading trips", e)
             }
     }
 }

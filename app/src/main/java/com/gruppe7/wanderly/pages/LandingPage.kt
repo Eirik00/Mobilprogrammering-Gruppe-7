@@ -86,10 +86,10 @@ fun LandingPage(paddingValues: PaddingValues) {
                         textDecoration = TextDecoration.Underline,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    CurrentTripRow("Sarpsborg Lysløype", "69%", true)
+                    /*CurrentTripRow("Sarpsborg Lysløype", "69%", true)
                     for (i in 1..5) {
                         CurrentTripRow("Sarpsborg Lysløype", "Not Started", false)
-                    }
+                    }*/
                     Button(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally),

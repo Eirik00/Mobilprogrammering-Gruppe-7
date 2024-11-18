@@ -37,6 +37,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
 
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -102,7 +103,10 @@ fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable{
-                incrementClickCount(trip, db)
+                db.collection("trips")
+                    .document(trip.id)
+                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+
                 onClick()
             },
         shape = RoundedCornerShape(8.dp),
@@ -119,17 +123,6 @@ fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
             Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
         }
     }
-}
-
-fun incrementClickCount(trip: TripObject, db: FirebaseFirestore) {
-    val newClickCount = trip.clickCount + 1
-
-    db.collection("trips")
-        .document(trip.id) // Make sure each trip has a unique document ID
-        .update("clickCount", newClickCount)
-        .addOnSuccessListener {
-            trip.clickCount = newClickCount
-        }
 }
 
 @Composable
@@ -168,7 +161,7 @@ fun FindMoreTripsDialog(trip: TripObject, onDismiss: () -> Unit) {
                 Text("End point: $endAddress", fontSize = 14.sp)
                 Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
                 Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-                Text("Minutes to walk by foot: ${trip.minutesToWalkByFoot}", fontSize = 14.sp)
+                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
             }
         },
         confirmButton = {
