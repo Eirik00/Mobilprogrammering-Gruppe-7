@@ -75,7 +75,7 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     }
 
     selectedTrip?.let { trip ->
-        PopularTripDialog(trip = trip, onDismiss = { selectedTrip = null })
+        TripDialog(trip = trip, onDismiss = { selectedTrip = null })
     }
 }
 
@@ -153,58 +153,4 @@ fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
             }
         }
     }
-}
-
-@Composable
-fun PopularTripDialog(trip: TripObject, onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val geocoder = Geocoder(context, Locale.getDefault())
-
-    var startAddress by remember { mutableStateOf("Loading...") }
-    var endAddress by remember { mutableStateOf("Loading...") }
-
-    LaunchedEffect(trip.startPoint) {
-        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
-        } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
-        }
-    }
-
-    LaunchedEffect(trip.endPoint) {
-        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
-        } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Description: ${trip.description}", fontSize = 14.sp)
-                Text("Start point: $startAddress", fontSize = 14.sp)
-                Text("End point: $endAddress", fontSize = 14.sp)
-                Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
-                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
-            }
-        },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Save Trip")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(16.dp)
-    )
 }

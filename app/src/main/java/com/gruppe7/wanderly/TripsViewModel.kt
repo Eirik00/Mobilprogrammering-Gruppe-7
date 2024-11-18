@@ -23,7 +23,8 @@ data class TripObject(
     val images: List<String> = emptyList(),
     val waypoints: List<GeoPoint>? = emptyList(),
     val transportationMode: String = "",
-    val clickCounter: Int = 0
+    val clickCounter: Int = 0,
+    val savedLocally: Boolean = false,
 )
 
 sealed class TripsFetchState {

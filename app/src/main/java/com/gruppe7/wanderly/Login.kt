@@ -13,6 +13,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 
+fun loginHandle(email: String, password: String){
+
+}
+
 
 @Composable
 fun Login(mode: String,authViewModel: AuthViewModel){
@@ -36,6 +40,9 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                     label = { Text("password") },
                     visualTransformation = PasswordVisualTransformation()
                 )
+                Text(
+                    text = "Incorrect email/password"
+                )
                 Row{
                     Button(
                         onClick = { authViewModel.login(email, password)}
@@ -58,11 +65,17 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                     onValueChange = { email = it },
                     label = { Text("E-mail") }
                 )
+                Text(
+                    text = "Must be a valid email!"
+                )
                 TextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation()
+                )
+                Text(
+                    text = "Password must be above 6 letters"
                 )
                 Row{
                     Button(

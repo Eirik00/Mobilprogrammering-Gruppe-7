@@ -3,6 +3,7 @@ package com.gruppe7.wanderly.pages
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.gruppe7.wanderly.TripObject
@@ -77,7 +80,7 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     }
 
     selectedTrip?.let { trip ->
-        SavedTripDialog(
+        TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null }
         )
@@ -162,7 +165,8 @@ fun TripSections(
                 images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
                 tripDurationInMinutes = 2,
-                waypoints = listOf()
+                waypoints = listOf(),
+                savedLocally = true
             ),
             TripObject(
                 name = "Vansjø - 3 days",
@@ -174,7 +178,8 @@ fun TripSections(
                 images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
                 lengthInKm = 20.0,
                 tripDurationInMinutes = 2,
-                waypoints = listOf()
+                waypoints = listOf(),
+                savedLocally = true
             )
         )
 
@@ -257,9 +262,11 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable {
-                db.collection("trips")
-                    .document(trip.id)
-                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+                if(!trip.savedLocally){
+                    db.collection("trips")
+                        .document(trip.id)
+                        .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+                }
                 onClick()
                        },
         shape = RoundedCornerShape(8.dp),
@@ -278,33 +285,88 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
 }
 
 @Composable
-fun SavedTripDialog(trip: TripObject, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Start: ${trip.startPoint.latitude}, ${trip.startPoint.longitude}", fontSize = 16.sp)
-                Text("Description: ${trip.description}", fontSize = 16.sp)
-                Text("Packing List: ${trip.packingList}", fontSize = 16.sp)
-                Text("Destination: ${trip.endPoint.latitude}, ${trip.endPoint.longitude}", fontSize = 16.sp)
+fun TripDialog(
+    trip: TripObject,
+    //onSaveOrDelete: () -> Unit,
+    onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
+
+    var startAddress by remember { mutableStateOf("Loading...") }
+    var endAddress by remember { mutableStateOf("Loading...") }
+
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }
+    }
+
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ){
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ){
+            Text(
+                text = trip.name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text("Description: ${trip.description}", fontSize = 14.sp)
+            Text("Start point: $startAddress", fontSize = 14.sp)
+            Text("End point: $endAddress", fontSize = 14.sp)
+            Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+            Text("Trip duration: ${trip.tripDurationInMinutes} minutes", fontSize = 14.sp)
+
+            if(trip.waypoints?.isNotEmpty() == true){
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    wayPoints = trip.waypoints,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }else {
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
             }
-        },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("Save Trip")
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Button(onClick = { Log.d("STATE", "Clicked") }) {
+                    Text(if(trip.savedLocally) "Delete Trip" else "Save Trip")
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(16.dp)
-    )
+        }
+    }
 }
 
 @Composable

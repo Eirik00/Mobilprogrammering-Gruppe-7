@@ -22,7 +22,8 @@ android {
         versionCode = 2
         versionName = "0.2.0"
 
-        manifestPlaceholders["API_KEY"] = "${localProperties["apiKey"] ?: ""}"
+        buildConfigField("String", "API_KEY", "\"${localProperties["apiKey"]}\"")
+        manifestPlaceholders["API_KEY"] = localProperties["apiKey"] ?: ""
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -80,6 +81,9 @@ dependencies {
 
     implementation(libs.play.services.location)
 
+    implementation(libs.android.maps.utils)
+    implementation(libs.google.maps.services)
+
     implementation(libs.play.services.maps)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.firebase.firestore.ktx)
@@ -106,8 +110,8 @@ dependencies {
     androidTestImplementation(libs.androidx.navigation.testing)
     implementation(kotlin("script-runtime"))
 
-    implementation("io.coil-kt.coil3:coil-compose:3.0.0-rc02")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.0-rc02")
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
-    implementation("com.google.firebase:firebase-firestore-ktx:24.5.0")
+    implementation(libs.firebase.firestore.ktx.v2450)
 }

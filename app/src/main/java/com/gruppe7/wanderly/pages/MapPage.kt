@@ -1,6 +1,9 @@
 package com.gruppe7.wanderly.pages
 
+import android.app.Activity
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -20,8 +23,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.compose.AppTheme
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.PolylineOptions
+import com.google.firebase.firestore.GeoPoint
+import com.gruppe7.wanderly.BuildConfig
 import com.gruppe7.wanderly.MainLayout
-
+import com.google.maps.GeoApiContext
+import com.google.maps.DirectionsApi
+import com.google.maps.model.DirectionsResult
+import com.google.maps.model.TravelMode
+import com.google.maps.PendingResult
 
 @Composable
 fun MapPage(paddingValues: PaddingValues){
@@ -46,6 +57,109 @@ fun GoogleMapView(modifier: Modifier = Modifier) {
             googleMap.addMarker(MarkerOptions().position(initialPosition).title("Marker"))
         }
     }
+}
+
+@Composable
+fun GoogleMapTripView(
+    startPoint: GeoPoint,
+    endPoint: GeoPoint,
+    modifier: Modifier = Modifier,
+    wayPoints: List<GeoPoint> = emptyList()
+) {
+    val context = LocalContext.current
+    val mapView = rememberMapViewWithLifecycle()
+    val startLatLng = LatLng(startPoint.latitude, startPoint.longitude)
+    val endLatLng = LatLng(endPoint.latitude, endPoint.longitude)
+
+    AndroidView(
+        factory = { mapView },
+        modifier = modifier,
+        update = { mv ->
+            mv.getMapAsync { googleMap ->
+                // Clear previous markers/routes
+                googleMap.clear()
+
+                // Set up the Directions Service
+                val directionsService = GeoApiContext.Builder()
+                    .apiKey(BuildConfig.API_KEY)
+                    .build()
+
+                // Create DirectionsRequest
+                val wayPointLatLngs = wayPoints.map {
+                    com.google.maps.model.LatLng(it.latitude, it.longitude)
+                }.toTypedArray()
+
+                DirectionsApi.newRequest(directionsService)
+                    .origin(com.google.maps.model.LatLng(startLatLng.latitude, startLatLng.longitude))
+                    .destination(com.google.maps.model.LatLng(endLatLng.latitude, endLatLng.longitude))
+                    .waypoints(*wayPointLatLngs)
+                    .mode(TravelMode.WALKING)
+                    .setCallback(object : PendingResult.Callback<DirectionsResult> {
+                        override fun onResult(result: DirectionsResult) {
+                            if (result.routes.isNotEmpty()) {
+                                // Draw the route on the map
+                                val path = result.routes[0].overviewPolyline.decodePath()
+
+                                // Convert to Google Maps LatLng and draw
+                                val mapPoints = path.map {
+                                    LatLng(it.lat, it.lng)
+                                }
+
+                                // Must run UI updates on main thread
+                                (context as? Activity)?.runOnUiThread {
+                                    // Add markers
+                                    googleMap.addMarker(
+                                        MarkerOptions()
+                                            .position(startLatLng)
+                                            .title("Start")
+                                    )
+
+                                    googleMap.addMarker(
+                                        MarkerOptions()
+                                            .position(endLatLng)
+                                            .title("End")
+                                    )
+
+                                    // Add waypoint markers
+                                    wayPoints.forEachIndexed { index, point ->
+                                        googleMap.addMarker(
+                                            MarkerOptions()
+                                                .position(LatLng(point.latitude, point.longitude))
+                                                .title("Stop ${index + 1}")
+                                        )
+                                    }
+
+                                    // Draw route
+                                    googleMap.addPolyline(
+                                        PolylineOptions()
+                                            .addAll(mapPoints)
+                                            .color(Color.BLUE)
+                                            .width(5f)
+                                    )
+
+                                    // Move camera to show the whole route
+                                    val bounds = LatLngBounds.Builder().apply {
+                                        include(startLatLng)
+                                        include(endLatLng)
+                                        wayPoints.forEach {
+                                            include(LatLng(it.latitude, it.longitude))
+                                        }
+                                    }.build()
+
+                                    googleMap.moveCamera(
+                                        CameraUpdateFactory.newLatLngBounds(bounds, 100)
+                                    )
+                                }
+                            }
+                        }
+
+                        override fun onFailure(e: Throwable) {
+                            Log.e("DirectionsAPI", "Error getting directions", e)
+                        }
+                    })
+            }
+        }
+    )
 }
 
 @Composable
@@ -93,4 +207,3 @@ fun MapPagePreview() {
         }
     }
 }
-
