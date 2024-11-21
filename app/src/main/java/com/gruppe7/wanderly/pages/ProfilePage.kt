@@ -49,9 +49,9 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
 
     var userPubTrips by remember { mutableStateOf(listOf<TripObject>())}
 
-    LaunchedEffect(userInfo.uuid) {
-        Log.d("STATE", "user id: ${userInfo.uuid}")
-        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.uuid)
+    LaunchedEffect(userInfo.UUID) {
+        Log.d("STATE", "user id: ${userInfo.UUID}")
+        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
     }
 
     // Launcher to select image from gallery

@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         setContent {
+            val navController = rememberNavController()
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
             val authViewModel = remember { AuthViewModel(applicationContext) }

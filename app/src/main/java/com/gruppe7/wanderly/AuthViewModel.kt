@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 data class UserData(
     val username: String = "",
     val email: String = "",
-    val uuid: String = ""
+    val UUID: String = ""
 )
 
 class AuthViewModel(private val context: Context) : ViewModel() {
@@ -89,7 +89,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                             _userData.value = UserData(
                                 username = userData["username"] as String,
                                 email = userData["email"] as String,
-                                uuid = userData["UUID"] as String
+                                UUID = userData["UUID"] as String
                             )
                             saveUserData(context, _userData.value)
                             result = true
@@ -114,6 +114,8 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
     fun signOut() {
         _firebaseAuth.value.signOut()
+        _isLoggedIn.value = false
+        _userData.value = UserData()
     }
 
     private suspend fun fetchUserData(userId: String): UserData? {
@@ -139,7 +141,7 @@ private fun loadUserData(context: Context): UserData{
     return UserData(
         username = sharedPreferences.getString("username", "") ?: "",
         email = sharedPreferences.getString("email", "") ?: "",
-        uuid = sharedPreferences.getString("UUID", "") ?: ""
+        UUID = sharedPreferences.getString("UUID", "") ?: ""
     )
 }
 
@@ -148,7 +150,7 @@ private fun saveUserData(context: Context, userData: UserData) {
     with(sharedPreferences.edit()) {
         putString("username", userData.username)
         putString("email", userData.email)
-        putString("UUID", userData.uuid)
+        putString("UUID", userData.UUID)
         apply()
     }
 }
