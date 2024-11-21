@@ -24,6 +24,7 @@ data class TripObject(
     val waypoints: List<GeoPoint>? = emptyList(),
     val transportationMode: String = "",
     val clickCounter: Int = 0,
+    val ownerID: String = "",
     val savedLocally: Boolean = false,
 )
 
@@ -69,6 +70,35 @@ class TripsViewModel : ViewModel() {
                 _tripsState.value = TripsFetchState.Error(e)
                 Log.e("ERROR", "Error fetching trips", e)
             }
+        }
+    }
+
+    suspend fun fetchTripsByUser(uuid: String): List<TripObject> {
+        return try {
+            val db = FirebaseFirestore.getInstance()
+            val result = db.collection("trips")
+                .whereEqualTo("ownerID", uuid)
+                .get()
+                .await()
+
+            val fetchedTrips = result.mapNotNull { document ->
+                try {
+                    document.toObject(TripObject::class.java).copy(id = document.id)
+                } catch (e: Exception) {
+                    Log.e("ERROR", "Error converting document ${document.id}", e)
+                    null
+                }
+            }
+
+            _trips.value = fetchedTrips
+            _tripsState.value = TripsFetchState.Success(fetchedTrips)
+            Log.d("STATE", "Successfully fetched ${fetchedTrips.size} trips from user $uuid!")
+
+            fetchedTrips
+        } catch (e: Exception) {
+            _tripsState.value = TripsFetchState.Error(e)
+            Log.e("ERROR", "Error fetching trips", e)
+            emptyList()
         }
     }
 

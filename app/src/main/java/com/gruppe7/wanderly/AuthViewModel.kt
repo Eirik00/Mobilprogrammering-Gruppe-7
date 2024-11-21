@@ -1,7 +1,8 @@
 package com.gruppe7.wanderly
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +11,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,7 +23,7 @@ data class UserData(
     val uuid: String = ""
 )
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val context: Context) : ViewModel() {
     private val _firebaseAuth = MutableStateFlow(FirebaseAuth.getInstance())
     val firebaseAuth: StateFlow<FirebaseAuth> = _firebaseAuth
 
@@ -41,10 +41,13 @@ class AuthViewModel : ViewModel() {
         _firebaseAuth.value.addAuthStateListener { auth ->
             _isLoggedIn.value = auth.currentUser != null
             _user.value = auth.currentUser
+            if(_isLoggedIn.value){
+                _userData.value = loadUserData(context)
+            }
         }
     }
 
-    fun login(email: String, password: String): Boolean {
+    fun login(context: Context, email: String, password: String): Boolean {
         var result = false
         _firebaseAuth.value.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener() { task -> if (task.isSuccessful) {
@@ -54,6 +57,7 @@ class AuthViewModel : ViewModel() {
                         fetchUserData(task.result?.user?.uid ?: return@withContext null)
                     }
                     _userData.value = userData ?: UserData()
+                    saveUserData(context, _userData.value)
                     Log.d("STATE","USERNAME: ${_userData.value.username}")
                     result = true
                 }
@@ -64,7 +68,7 @@ class AuthViewModel : ViewModel() {
         return result
     }
 
-    fun register(username: String, email: String, password: String): Boolean{
+    fun register(context: Context, username: String, email: String, password: String): Boolean{
         var result = false
         _firebaseAuth.value.createUserWithEmailAndPassword(email, password).addOnCompleteListener()
         {
@@ -87,6 +91,7 @@ class AuthViewModel : ViewModel() {
                                 email = userData["email"] as String,
                                 uuid = userData["UUID"] as String
                             )
+                            saveUserData(context, _userData.value)
                             result = true
                         }
                         .addOnFailureListener { exception ->
@@ -126,5 +131,24 @@ class AuthViewModel : ViewModel() {
             Log.e("ERROR", "Error fetching user data for userId: $userId", e)
             null
         }
+    }
+}
+
+private fun loadUserData(context: Context): UserData{
+    val sharedPreferences: SharedPreferences = context.getSharedPreferences("userData", Context.MODE_PRIVATE)
+    return UserData(
+        username = sharedPreferences.getString("username", "") ?: "",
+        email = sharedPreferences.getString("email", "") ?: "",
+        uuid = sharedPreferences.getString("UUID", "") ?: ""
+    )
+}
+
+private fun saveUserData(context: Context, userData: UserData) {
+    val sharedPreferences: SharedPreferences = context.getSharedPreferences("userData", Context.MODE_PRIVATE)
+    with(sharedPreferences.edit()) {
+        putString("username", userData.username)
+        putString("email", userData.email)
+        putString("UUID", userData.uuid)
+        apply()
     }
 }

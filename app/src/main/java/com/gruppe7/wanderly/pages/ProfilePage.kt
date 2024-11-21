@@ -35,16 +35,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.compose.AppTheme
 import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.MainLayout
+import com.gruppe7.wanderly.TripObject
+import com.gruppe7.wanderly.TripsViewModel
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun ProfilePage(authViewModel: AuthViewModel) {
+fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
     val userInfo = authViewModel.userData.collectAsState().value
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
+    var userPubTrips by remember { mutableStateOf(listOf<TripObject>())}
+
+    LaunchedEffect(userInfo.uuid) {
+        Log.d("STATE", "user id: ${userInfo.uuid}")
+        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.uuid)
+    }
 
     // Launcher to select image from gallery
     val launcher = rememberLauncherForActivityResult(
@@ -145,11 +153,9 @@ fun ProfilePage(authViewModel: AuthViewModel) {
             textAlign = TextAlign.Start
         )
 
-
-        // Example published trips
-        PublishedTripRow("Oslo Sightseeing")
-        PublishedTripRow("Sarpsborg Lysløype")
-        PublishedTripRow("Sarpsborg Lysløype")
+        userPubTrips.forEach { trip ->
+            PublishedTripRow(trip.name)
+        }
     }
 }
 
@@ -174,16 +180,5 @@ fun PublishedTripRow(tripName: String) {
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
-    }
-}
-
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ProfilePagePreview() {
-    AppTheme(highContrast = true) {
-        MainLayout { innerPadding, selectedItem, _ ->
-            ProfilePage(AuthViewModel())
-        }
     }
 }

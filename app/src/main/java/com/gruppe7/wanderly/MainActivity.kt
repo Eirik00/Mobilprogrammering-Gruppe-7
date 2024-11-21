@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.example.compose.AppTheme
 import com.google.firebase.FirebaseApp
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
-            val authViewModel = remember { AuthViewModel() }
+            val authViewModel = remember { AuthViewModel(applicationContext) }
             val tripsViewModel = remember { TripsViewModel() }
 
             val userId = authViewModel.user.collectAsState().value?.uid ?: "defaultUserId"
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
                                 0 -> LandingPage(innerPadding)
                                 1 -> TripPage(tripsViewModel, userId)
                                 2 -> MapPage(innerPadding)
-                                3 -> ProfilePage(authViewModel)
+                                3 -> ProfilePage(authViewModel, tripsViewModel)
                                 4 -> SettingsPage(settingsViewModel)
                                 5 -> Login(loginMode ?: "none", authViewModel)
                                 else -> Text("No page for index: $selectedIndex")

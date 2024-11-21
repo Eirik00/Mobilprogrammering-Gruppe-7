@@ -10,16 +10,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-
-
-fun loginHandle(email: String, password: String){
-
-}
 
 
 @Composable
 fun Login(mode: String,authViewModel: AuthViewModel){
+    val context = LocalContext.current
     var email by remember{ mutableStateOf("") }
     var password by remember{ mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -45,7 +42,7 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                 )
                 Row{
                     Button(
-                        onClick = { authViewModel.login(email, password)}
+                        onClick = { authViewModel.login(context, email, password)}
                     ) {
                         Text("Login")
                     }
@@ -79,7 +76,7 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                 )
                 Row{
                     Button(
-                        onClick = { authViewModel.register(username, email, password) }
+                        onClick = { authViewModel.register(context, username, email, password) }
                     ) {
                         Text("Register")
                     }

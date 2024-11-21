@@ -1,20 +1,26 @@
 package com.gruppe7.wanderly.pages
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
@@ -23,6 +29,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.compose.AppTheme
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.firebase.firestore.GeoPoint
@@ -33,6 +40,9 @@ import com.google.maps.DirectionsApi
 import com.google.maps.model.DirectionsResult
 import com.google.maps.model.TravelMode
 import com.google.maps.PendingResult
+
+
+
 
 @Composable
 fun MapPage(paddingValues: PaddingValues){
@@ -47,14 +57,46 @@ fun MapPage(paddingValues: PaddingValues){
 
 @Composable
 fun GoogleMapView(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     // Remember the MapView so it isn't recreated on recomposition
     val mapView = rememberMapViewWithLifecycle()
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val locationPermissionRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        // Handle Permission result
+    }
+
+    LaunchedEffect(Unit) {
+        locationPermissionRequest.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
 
     AndroidView(factory = { mapView }, modifier = modifier) { mv ->
         mv.getMapAsync { googleMap ->
-            val initialPosition = LatLng(0.0, 0.0)
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initialPosition, 10f))
-            googleMap.addMarker(MarkerOptions().position(initialPosition).title("Marker"))
+            if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return@getMapAsync
+            }
+
+            fusedLocationClient.lastLocation.addOnCompleteListener { task ->
+                val location = task.result
+                location.let {
+                    val latLng = LatLng(it.latitude, it.longitude)
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                    googleMap.addMarker(MarkerOptions().position(latLng).title("You are here"))
+                }
+            }
         }
     }
 }
