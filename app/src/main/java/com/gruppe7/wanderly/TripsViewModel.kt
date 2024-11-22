@@ -86,6 +86,24 @@ class TripsViewModel : ViewModel() {
             }
     }
 
+    fun fetchSavedTrips(userId: String, onTripsFetched: (List<TripObject>) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("savedTrips")
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.e("Firebase", "Error fetching saved trips", error)
+                    return@addSnapshotListener
+                }
+                if (snapshots != null) {
+                    val trips = snapshots.map { document ->
+                        document.toObject(TripObject::class.java)
+                    }
+                    onTripsFetched(trips)
+                }
+            }
+    }
+
     init {
         fetchTrips()
     }
