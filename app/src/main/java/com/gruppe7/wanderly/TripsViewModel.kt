@@ -21,7 +21,7 @@ data class TripObject(
     val endPoint: GeoPoint = GeoPoint(0.0, 0.0),
     val packingList: List<String> = emptyList(),
     val images: List<String> = emptyList(),
-    val waypoints: List<GeoPoint>? = emptyList(),
+    val waypoints: List<GeoPoint> = emptyList(),
     val transportationMode: String = "",
     val clickCounter: Int = 0,
     val ownerID: String = "",
@@ -41,6 +41,66 @@ class TripsViewModel : ViewModel() {
     private val _trips = MutableStateFlow<List<TripObject>>(emptyList())
     val trips: StateFlow<List<TripObject>> = _trips
 
+    private val _savedTrips = MutableStateFlow<List<TripObject>>(emptyList())
+    val savedTrips: StateFlow<List<TripObject>> get() = _savedTrips
+
+    fun addSavedTrip(trip: TripObject) {
+        if (!_savedTrips.value.contains(trip)) {
+            _savedTrips.value = _savedTrips.value + trip
+        }
+    }
+
+    //Må legge til funksjon
+    fun removeSavedTrip(trip: TripObject) {
+        _savedTrips.value = _savedTrips.value - trip
+    }
+
+    fun saveTripToFirebase(userId: String, trip: TripObject) {
+        val db = FirebaseFirestore.getInstance()
+
+        val savedTrip = mapOf(
+            "userId" to userId,
+            "tripId" to trip.id,
+            "name" to trip.name,
+            "type" to trip.type,
+            "description" to trip.description,
+            "lengthInKm" to trip.lengthInKm,
+            "tripDurationInMinutes" to trip.tripDurationInMinutes,
+            "startPoint" to trip.startPoint, // GeoPoint
+            "endPoint" to trip.endPoint, // GeoPoint
+            "packingList" to trip.packingList, // List<String>
+            "images" to trip.images, // List<String>
+            "waypoints" to trip.waypoints,
+            "transportationMode" to trip.transportationMode,
+            "clickCounter" to trip.clickCounter,
+            "ownerID" to trip.ownerID,
+            "savedLocally" to trip.savedLocally
+        )
+
+        db.collection("savedTrips").add(savedTrip)
+            .addOnSuccessListener {
+                Log.d("Firebase", "Trip saved successfully!")
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Error saving trip", e)
+            }
+    }
+
+    fun fetchSavedTrips() {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("savedTrips")
+            .get()
+            .addOnSuccessListener { result ->
+                val trips = result.map { document ->
+                    document.toObject(TripObject::class.java)
+                }
+                _savedTrips.value = trips
+            }
+            .addOnFailureListener { exception ->
+                Log.e("TripsViewModel", "Error fetching saved trips", exception)
+            }
+    }
+
     init {
         fetchTrips()
     }
@@ -57,7 +117,7 @@ class TripsViewModel : ViewModel() {
                 val fetchedTrips = result.mapNotNull { document ->
                     try {
                         document.toObject(TripObject::class.java)
-                    }catch(e: Exception) {
+                    } catch (e: Exception) {
                         Log.e("ERROR", "Error converting document ${document.id}", e)
                         null
                     }
@@ -66,7 +126,7 @@ class TripsViewModel : ViewModel() {
                 _trips.value = fetchedTrips
                 _tripsState.value = TripsFetchState.Success(fetchedTrips)
                 Log.d("STATE", "Successfully fetched ${fetchedTrips.size} trips!")
-            }catch(e: Exception){
+            } catch (e: Exception) {
                 _tripsState.value = TripsFetchState.Error(e)
                 Log.e("ERROR", "Error fetching trips", e)
             }

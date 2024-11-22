@@ -2,6 +2,7 @@ package com.gruppe7.wanderly.pages
 
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,14 +22,25 @@ import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
 import java.util.Locale
 import androidx.compose.ui.Alignment
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
+    LaunchedEffect(Unit) {
+        tripsViewModel.loadTrips()
+    }
+
     val scrollState = rememberScrollState()
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    Log.d("FindMoreTripsPage", "User ID: $userId")
+
+    if (userId == null) {
+        Log.e("FindMoreTripsPage", "User is not logged in.")
+    }
 
     var tripsWithClicks by remember { mutableStateOf<List<TripObject>>(emptyList()) }
 
@@ -37,7 +49,6 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
             val clickCounter = getClickCounterFromFirestore(trip.id)
             trip.copy(clickCounter = clickCounter)
         }
-
         tripsWithClicks = tripsWithUpdatedClicks
     }
 
@@ -60,7 +71,12 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                 .padding(padding)
                 .verticalScroll(scrollState)
                 .fillMaxHeight()
+                .padding(16.dp)
         ) {
+            Text("Most popular trips", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             sortedTrips.forEachIndexed { index, trip ->
                 val medal = when (index) {
                     0 -> "🥇"
@@ -68,16 +84,30 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                     2 -> "🥉"
                     else -> ""
                 }
-                PopularTripsCard(trip = trip, medal = medal, onClick = { selectedTrip = trip })
-                Spacer(modifier = Modifier.height(8.dp))
+                    PopularTripsCard(
+                        trip = trip,
+                        medal = medal,
+                        onClick = { selectedTrip = trip }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
-    }
 
     selectedTrip?.let { trip ->
-        TripDialog(trip = trip, onDismiss = { selectedTrip = null })
+        PopularTripDialog(
+            trip = trip,
+            tripsViewModel = tripsViewModel,
+            onDismiss = { selectedTrip = null },
+            onSaveTrip = {
+                userId?.let {
+                    saveTripToFirebase(userId = it, trip = trip)
+                } ?: Log.e("FindMoreTripsPage", "User not logged in, cannot save trip.")
+            }
+        )
     }
 }
+
 
 suspend fun getClickCounterFromFirestore(tripId: String): Int {
     val db = FirebaseFirestore.getInstance()
@@ -89,13 +119,17 @@ suspend fun getClickCounterFromFirestore(tripId: String): Int {
 }
 
 @Composable
-fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
+fun PopularTripsCard(
+    trip: TripObject,
+    medal: String,
+    onClick: () -> Unit
+) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
-    val db = FirebaseFirestore.getInstance()
 
     var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
     var endAddress by remember(trip.endPoint) { mutableStateOf("Loading...") }
+    val db = FirebaseFirestore.getInstance()
 
     LaunchedEffect(trip.startPoint) {
         startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -134,13 +168,14 @@ fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-            ) {
-                Text(trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("Description: ${trip.description}", fontSize = 14.sp)
-                Text("Start point: $startAddress", fontSize = 14.sp)
-                Text("End point: $endAddress", fontSize = 14.sp)
-                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-            }
+        ) {
+            Text(trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Description: ${trip.description}", fontSize = 14.sp)
+            Text("Start point: $startAddress", fontSize = 14.sp)
+            Text("End point: $endAddress", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+        }
 
             if (medal.isNotEmpty()) {
                 Text(
@@ -154,3 +189,61 @@ fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun PopularTripDialog(trip: TripObject, tripsViewModel: TripsViewModel, onDismiss: () -> Unit, onSaveTrip: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
+
+    var startAddress by remember { mutableStateOf("Loading...") }
+    var endAddress by remember { mutableStateOf("Loading...") }
+
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+        }
+    }
+
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        } else {
+            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Description: ${trip.description}", fontSize = 14.sp)
+                Text("Start point: $startAddress", fontSize = 14.sp)
+                Text("End point: $endAddress", fontSize = 14.sp)
+                Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onSaveTrip()
+                onDismiss()
+            }) {
+                Text("Save Trip")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(16.dp)
+    )
+}
+

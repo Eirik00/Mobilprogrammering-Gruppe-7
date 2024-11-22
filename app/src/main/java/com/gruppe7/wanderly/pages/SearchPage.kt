@@ -2,6 +2,7 @@ package com.gruppe7.wanderly.pages
 
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsFetchState
 import com.gruppe7.wanderly.TripsViewModel
@@ -31,6 +33,8 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
     }
 
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
+
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
 
     Scaffold(
         topBar = {
@@ -67,12 +71,20 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
     }
 
     selectedTrip?.let { trip ->
-        SearchDialog(trip = trip, onDismiss = { selectedTrip = null })
+        SearchDialog(
+            trip = trip,
+            onDismiss = { selectedTrip = null },
+            onSaveTrip = {
+                userId?.let {
+                    saveTripToFirebase(userId = it, trip = trip)
+                } ?: Log.e("SearchPage", "User not logged in, cannot save trip.")
+            }
+        )
     }
 }
 
 @Composable
-fun SearchDialog(trip: TripObject, onDismiss: () -> Unit) {
+fun SearchDialog(trip: TripObject, onDismiss: () -> Unit, onSaveTrip: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
 
@@ -111,7 +123,10 @@ fun SearchDialog(trip: TripObject, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss) {
+            Button(onClick = {
+                onSaveTrip()
+                onDismiss()
+            }) {
                 Text("Save Trip")
             }
         },

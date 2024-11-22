@@ -17,11 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.gruppe7.wanderly.TripObject
@@ -39,6 +37,13 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     var showSearchPage by remember { mutableStateOf(false) }
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var savedTrips by remember { mutableStateOf<List<TripObject>>(emptyList()) }
+
+    LaunchedEffect(userId) {
+        fetchSavedTrips(userId) { trips ->
+            savedTrips = trips
+        }
+    }
 
     when {
         showCreateTripPage -> {
@@ -70,6 +75,7 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     TripSections(
+                        savedTrips = savedTrips,
                         onTripClick = { trip -> selectedTrip = trip },
                         navigateToPopularTrips = { showPopularTripsPage = true },
                         navigateToFindMoreTrips = { showFindMoreTripsPage = true }
@@ -85,6 +91,22 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
             onDismiss = { selectedTrip = null }
         )
     }
+}
+
+fun fetchSavedTrips(userId: String, onTripsFetched: (List<TripObject>) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("savedTrips")
+        .whereEqualTo("userId", userId)
+        .get()
+        .addOnSuccessListener { result ->
+            val trips = result.map { document ->
+                document.toObject(TripObject::class.java)
+            }
+            onTripsFetched(trips)
+        }
+        .addOnFailureListener { e ->
+            Log.e("Firebase", "Error fetching saved trips", e)
+        }
 }
 
 @Composable
@@ -117,6 +139,7 @@ fun SearchSection(navigateToSearchPage: (String) -> Unit) {
 
 @Composable
 fun TripSections(
+    savedTrips: List<TripObject>,
     onTripClick: (TripObject) -> Unit,
     navigateToPopularTrips: () -> Unit,
     navigateToFindMoreTrips: () -> Unit
@@ -151,39 +174,9 @@ fun TripSections(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Saved trips", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3A3A3A))
-
         Spacer(modifier = Modifier.height(8.dp))
 
-        val trips = listOf(
-            TripObject(
-                name = "Midgard vikingsenter - 1 day",
-                type = "Historical",
-                startPoint = GeoPoint(59.3868641793198, 59.3868641793198),
-                description = "Explore Viking history with a full day at Midgard.",
-                packingList = listOf("Camera", "Water Bottle", "Snacks"),
-                endPoint = GeoPoint(59.30765675697069, 11.087157826950184),
-                images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
-                lengthInKm = 20.0,
-                tripDurationInMinutes = 2,
-                waypoints = listOf(),
-                savedLocally = true
-            ),
-            TripObject(
-                name = "Vansjø - 3 days",
-                type = "Adventure",
-                startPoint = GeoPoint(59.354477808278475, 10.923720027315635),
-                description = "Enjoy scenic views and outdoor activities over three days.",
-                packingList = listOf("Camera", "Water Bottle", "Snacks"),
-                endPoint = GeoPoint(59.444123, 10.694452),
-                images = listOf("https://vestfoldmuseene.no/midgard-vikingsenter/utstillinger"),
-                lengthInKm = 20.0,
-                tripDurationInMinutes = 2,
-                waypoints = listOf(),
-                savedLocally = true
-            )
-        )
-
-        trips.forEach { trip ->
+        savedTrips.forEach { trip ->
             SavedTripCard(trip = trip, onClick = { onTripClick(trip) })
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -287,8 +280,8 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
 @Composable
 fun TripDialog(
     trip: TripObject,
-    //onSaveOrDelete: () -> Unit,
-    onDismiss: () -> Unit) {
+    onDismiss: () -> Unit
+) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
 
@@ -335,7 +328,7 @@ fun TripDialog(
             Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
             Text("Trip duration: ${trip.tripDurationInMinutes} minutes", fontSize = 14.sp)
 
-            if(trip.waypoints?.isNotEmpty() == true){
+            if (trip.waypoints?.isNotEmpty() == true) {
                 GoogleMapTripView(
                     startPoint = trip.startPoint,
                     endPoint = trip.endPoint,
@@ -344,7 +337,7 @@ fun TripDialog(
                         .fillMaxWidth()
                         .height(200.dp)
                 )
-            }else {
+            } else {
                 GoogleMapTripView(
                     startPoint = trip.startPoint,
                     endPoint = trip.endPoint,
@@ -357,10 +350,7 @@ fun TripDialog(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                Button(onClick = { Log.d("STATE", "Clicked") }) {
-                    Text(if(trip.savedLocally) "Delete Trip" else "Save Trip")
-                }
+            ) {
                 TextButton(onClick = onDismiss) {
                     Text("Close")
                 }

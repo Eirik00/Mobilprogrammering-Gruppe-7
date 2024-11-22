@@ -2,6 +2,7 @@ package com.gruppe7.wanderly.pages
 
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
@@ -37,6 +39,12 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
 
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    Log.d("FindMoreTripsPage", "User ID: $userId")
+
+    if (userId == null) {
+        Log.e("FindMoreTripsPage", "User is not logged in.")
+    }
 
     Scaffold(
         topBar = {
@@ -62,14 +70,64 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             allTrips.forEach { trip ->
-                FindMoreTripsCard(trip = trip, onClick = { selectedTrip = trip })
+                FindMoreTripsCard(
+                    trip = trip,
+                    onClick = { selectedTrip = trip }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
 
     selectedTrip?.let { trip ->
-        FindMoreTripsDialog(trip = trip, onDismiss = { selectedTrip = null })
+        FindMoreTripsDialog(
+            trip = trip,
+            tripsViewModel = tripsViewModel,
+            onDismiss = { selectedTrip = null },
+            onSaveTrip = {
+                userId?.let {
+                    saveTripToFirebase(userId = it, trip = trip)
+                } ?: Log.e("FindMoreTripsPage", "User not logged in, cannot save trip.")
+            }
+        )
+    }
+}
+
+fun saveTripToFirebase(userId: String, trip: TripObject) {
+    val db = FirebaseFirestore.getInstance()
+
+    val savedTripQuery = db.collection("savedTrips")
+        .whereEqualTo("userId", userId)
+        .whereEqualTo("tripId", trip.id)
+    savedTripQuery.get().addOnSuccessListener { querySnapshot ->
+        if (querySnapshot.isEmpty) {
+            val savedTrip = mapOf(
+                "userId" to userId,
+                "tripId" to trip.id,
+                "name" to trip.name,
+                "description" to trip.description,
+                "startPoint" to trip.startPoint,
+                "endPoint" to trip.endPoint,
+                "lengthInKm" to trip.lengthInKm,
+                "transportationMode" to trip.transportationMode,
+                "tripDurationInMinutes" to trip.tripDurationInMinutes,
+                "packingList" to trip.packingList,
+                "waypoints" to trip.waypoints,
+                "images" to trip.images
+            )
+
+            db.collection("savedTrips").add(savedTrip)
+                .addOnSuccessListener {
+                    Log.d("Firebase", "Trip saved successfully!")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firebase", "Error saving trip", e)
+                }
+        } else {
+            Log.d("Firebase", "Trip is already saved")
+        }
+    }.addOnFailureListener { e ->
+        Log.e("Firebase", "Error checking if trip is saved", e)
     }
 }
 
@@ -125,8 +183,9 @@ fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
     }
 }
 
+
 @Composable
-fun FindMoreTripsDialog(trip: TripObject, onDismiss: () -> Unit) {
+fun FindMoreTripsDialog(trip: TripObject, tripsViewModel: TripsViewModel, onDismiss: () -> Unit, onSaveTrip: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
 
@@ -165,7 +224,10 @@ fun FindMoreTripsDialog(trip: TripObject, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            Button(onClick = onDismiss) {
+            Button(onClick = {
+                onSaveTrip()
+                onDismiss()
+            }) {
                 Text("Save Trip")
             }
         },
