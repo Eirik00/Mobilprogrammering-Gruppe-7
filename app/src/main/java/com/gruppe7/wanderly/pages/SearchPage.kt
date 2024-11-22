@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.gruppe7.wanderly.TripObject
@@ -18,6 +19,7 @@ import com.gruppe7.wanderly.TripsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () -> Unit) {
+    val context = LocalContext.current
     val trips = tripsViewModel.trips.collectAsState().value
     val isLoading = tripsViewModel.tripsState.collectAsState().value == TripsFetchState.Loading
 
@@ -68,11 +70,19 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
         }
     }
 
-    selectedTrip?.let { trip ->
-        TripDialog(
-            trip = trip,
-            onDismiss = { selectedTrip = null },
-
-        )
+    if(userId !== null) {
+        selectedTrip?.let { trip ->
+            TripDialog(
+                trip = trip,
+                onDismiss = { selectedTrip = null },
+                onSaveOrDelete = {
+                    if(trip.savedLocally) {
+                        tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                    }else {
+                        tripsViewModel.saveTripLocally(context, userId, trip)
+                    }
+                }
+            )
+        }
     }
 }

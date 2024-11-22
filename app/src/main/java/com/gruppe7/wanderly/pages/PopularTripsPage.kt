@@ -28,6 +28,7 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
@@ -39,6 +40,7 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
 
     if (userId == null) {
         Log.e("FindMoreTripsPage", "User is not logged in.")
+        return
     }
 
     LaunchedEffect(allTrips) {
@@ -96,7 +98,13 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-
+            onSaveOrDelete = {
+                if(trip.savedLocally) {
+                    tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                }else {
+                    tripsViewModel.saveTripLocally(context, userId, trip)
+                }
+            }
         )
     }
 }

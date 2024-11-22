@@ -1,10 +1,12 @@
 package com.gruppe7.wanderly
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,7 +27,8 @@ data class TripObject(
     val transportationMode: String = "",
     val clickCounter: Int = 0,
     val ownerID: String = "",
-    val savedLocally: Boolean = false,
+    var savedLocally: Boolean = false,
+    val started: Boolean = false,
 )
 
 sealed class TripsFetchState {
@@ -41,66 +44,42 @@ class TripsViewModel : ViewModel() {
     private val _trips = MutableStateFlow<List<TripObject>>(emptyList())
     val trips: StateFlow<List<TripObject>> = _trips
 
-    private val _savedTrips = MutableStateFlow<List<TripObject>>(emptyList())
-    val savedTrips: StateFlow<List<TripObject>> get() = _savedTrips
+    private val _savedTrips = MutableStateFlow<Map<String, List<TripObject>>>(emptyMap())
+    val savedTrips: StateFlow<Map<String, List<TripObject>>> = _savedTrips
 
-    fun addSavedTrip(trip: TripObject) {
-        if (!_savedTrips.value.contains(trip)) {
-            _savedTrips.value = _savedTrips.value + trip
-        }
+    fun loadSavedTripsLocally(context: Context, userId: String) {
+        val sharedPreferences = context.getSharedPreferences("savedLocallyTrips", Context.MODE_PRIVATE)
+        val gson = Gson()
+
+        val userTrips = sharedPreferences.all
+            .filter { (key, value) ->
+                key.startsWith("${userId}_") && value is String
+            }
+            .map { (key, value) ->
+                gson.fromJson(value as String, TripObject::class.java)
+            }
+
+        _savedTrips.value = mapOf(userId to userTrips)
     }
 
-    //Må legge til funksjon
-    fun removeSavedTrip(trip: TripObject) {
-        _savedTrips.value = _savedTrips.value - trip
+    fun saveTripLocally(context: Context, userId: String, trip: TripObject) {
+        trip.savedLocally = true
+        val sharedPreferences = context.getSharedPreferences("savedLocallyTrips", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val tripJson = Gson().toJson(trip)
+        editor.putString("${userId}_${trip.id}", tripJson)
+        editor.apply()
+        Log.d("TripsViewModel", "Saved trip(${userId}_${trip.id}) locally: $trip")
+
+        loadSavedTripsLocally(context, userId)
     }
 
-    fun saveTripToFirebase(userId: String, trip: TripObject) {
-        val db = FirebaseFirestore.getInstance()
-
-        val savedTrip = mapOf(
-            "userId" to userId,
-            "tripId" to trip.id,
-            "name" to trip.name,
-            "description" to trip.description,
-            "lengthInKm" to trip.lengthInKm,
-            "tripDurationInMinutes" to trip.tripDurationInMinutes,
-            "startPoint" to trip.startPoint, // GeoPoint
-            "endPoint" to trip.endPoint, // GeoPoint
-            "packingList" to trip.packingList, // List<String>
-            "images" to trip.images, // List<String>
-            "waypoints" to trip.waypoints,
-            "transportationMode" to trip.transportationMode,
-            "clickCounter" to trip.clickCounter,
-            "ownerID" to trip.ownerID,
-            "savedLocally" to trip.savedLocally
-        )
-
-        db.collection("savedTrips").add(savedTrip)
-            .addOnSuccessListener {
-                Log.d("Firebase", "Trip saved successfully!")
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firebase", "Error saving trip", e)
-            }
-    }
-
-    fun fetchSavedTrips(userId: String, onTripsFetched: (List<TripObject>) -> Unit) {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("savedTrips")
-            .whereEqualTo("userId", userId)
-            .addSnapshotListener { snapshots, error ->
-                if (error != null) {
-                    Log.e("Firebase", "Error fetching saved trips", error)
-                    return@addSnapshotListener
-                }
-                if (snapshots != null) {
-                    val trips = snapshots.map { document ->
-                        document.toObject(TripObject::class.java)
-                    }
-                    onTripsFetched(trips)
-                }
-            }
+    fun deleteTripLocally(context: Context, userId: String, tripId: String){
+        val sharedPreferences = context.getSharedPreferences("savedLocallyTrips", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.remove("${userId}_$tripId")
+        editor.apply()
+        loadSavedTripsLocally(context, userId)
     }
 
     init {
@@ -164,18 +143,18 @@ class TripsViewModel : ViewModel() {
         }
     }
 
-    fun loadTrips() {
-        FirebaseFirestore.getInstance().collection("trips")
-            .get()
-            .addOnSuccessListener { result ->
-                val tripsList = result.map { document ->
-                    document.toObject(TripObject::class.java).copy(id = document.id)
-                }
-                _trips.value = tripsList
+    suspend fun createTrip(trip: TripObject){
+        try {
+            val db = FirebaseFirestore.getInstance()
+            val result = db.collection("trips")
+                .add(trip)
+                .await()
+            if(result != null){
+                Log.d("STATE", "Successfully created trip with id: ${result.id}")
             }
-            .addOnFailureListener { e ->
-                Log.e("ERROR", "Error loading trips", e)
-            }
+        } catch (e: Exception)  {
+            Log.e("ERROR", "Error creating trip", e)
+        }
     }
 }
 

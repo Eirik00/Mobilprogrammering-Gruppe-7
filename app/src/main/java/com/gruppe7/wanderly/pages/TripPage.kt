@@ -31,24 +31,20 @@ import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
+    val context = LocalContext.current
     var showCreateTripPage by remember { mutableStateOf(false) }
     var showPopularTripsPage by remember { mutableStateOf(false) }
     var showFindMoreTripsPage by remember { mutableStateOf(false) }
     var showSearchPage by remember { mutableStateOf(false) }
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     var searchQuery by remember { mutableStateOf("") }
-    var savedTrips by remember { mutableStateOf<List<TripObject>>(emptyList()) }
-    val db = FirebaseFirestore.getInstance()
+    val savedTrips = tripsViewModel.savedTrips.collectAsState().value[userId] ?: emptyList()
 
-    LaunchedEffect(Unit) {
-        fetchSavedTrips(db, userId) { trips ->
-            savedTrips = trips
-        }
-    }
+    Log.d("TripPage", "Saved Trips: ${savedTrips.size}")
 
     when {
         showCreateTripPage -> {
-            CreateTripPage(onBack = { showCreateTripPage = false }, userId = userId)
+            CreateTripPage( tripsViewModel = tripsViewModel, onBack = { showCreateTripPage = false }, userId = userId)
         }
 
         showPopularTripsPage -> {
@@ -99,36 +95,15 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-
+            onSaveOrDelete = {
+                if(trip.savedLocally) {
+                    tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                }else {
+                    tripsViewModel.saveTripLocally(context, userId, trip)
+                }
+            }
         )
     }
-}
-
-fun saveTripToFirebase(userId: String, trip: TripObject) {
-    val db = FirebaseFirestore.getInstance()
-    val tripWithOwner = trip.copy(ownerID = userId)
-
-    db.collection("savedTrips")
-        .add(tripWithOwner)
-        .addOnSuccessListener { Log.d("SaveTrip", "Trip saved successfully") }
-        .addOnFailureListener { e -> Log.e("SaveTrip", "Error saving trip", e) }
-}
-
-fun fetchSavedTrips(db: FirebaseFirestore, userId: String, onResult: (List<TripObject>) -> Unit) {
-    db.collection("savedTrips")
-        .addSnapshotListener { snapshots, e ->
-            if (e != null) {
-                Log.w("FetchSavedTrips", "Listen failed.", e)
-                onResult(emptyList())
-                return@addSnapshotListener
-            }
-
-            val trips = snapshots?.mapNotNull { document ->
-                document.toObject(TripObject::class.java).copy(id = document.id)
-            } ?: emptyList()
-
-            onResult(trips)
-        }
 }
 
 @Composable
@@ -302,7 +277,7 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
 @Composable
 fun TripDialog(
     trip: TripObject,
-    //onSaveOrDelete: () -> Unit,
+    onSaveOrDelete: () -> Unit,
     onDismiss: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
@@ -372,7 +347,10 @@ fun TripDialog(
                     modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(onClick = { Log.d("STATE", "Clicked") }) {
+                Button(onClick = {
+                    onSaveOrDelete()
+                    Log.d("TripDialog", "Save/Delete Trip Clicked!")
+                }) {
                     Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
                 }
                 TextButton(onClick = onDismiss) {

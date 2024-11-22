@@ -32,6 +32,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
+    val context = LocalContext.current
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
 
@@ -40,6 +41,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
 
     if (userId == null) {
         Log.e("FindMoreTripsPage", "User is not logged in.")
+        return
     }
 
     Scaffold(
@@ -79,7 +81,13 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-
+            onSaveOrDelete = {
+                if(trip.savedLocally) {
+                    tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                }else {
+                    tripsViewModel.saveTripLocally(context, userId, trip)
+                }
+            }
         )
     }
 }

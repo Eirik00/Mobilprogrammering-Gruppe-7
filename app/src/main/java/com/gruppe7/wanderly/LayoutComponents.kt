@@ -24,7 +24,7 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: (String) -> Un
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     var profileExpanded by remember { mutableStateOf(false) }
 
-    var menuList = if(isLoggedIn){
+    val menuList = if(isLoggedIn){
         listOf("Log Out")
     }else{
         listOf("Log in", "Register")
