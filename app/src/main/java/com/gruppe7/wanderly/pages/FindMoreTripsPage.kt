@@ -80,48 +80,14 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveTrip = {
-                saveTripToFirebase(trip)
+                if (userId != null) {
+                    saveTripToFirebase(userId, trip)
+                } else {
+                    Log.e("FindMoreTripsPage", "User ID is null, cannot save trip.")
+                }
                 selectedTrip = null
             }
         )
-    }
-}
-
-fun saveTripToFirebase(userId: String, trip: TripObject) {
-    val db = FirebaseFirestore.getInstance()
-
-    val savedTripQuery = db.collection("savedTrips")
-        .whereEqualTo("userId", userId)
-        .whereEqualTo("tripId", trip.id)
-    savedTripQuery.get().addOnSuccessListener { querySnapshot ->
-        if (querySnapshot.isEmpty) {
-            val savedTrip = mapOf(
-                "userId" to userId,
-                "tripId" to trip.id,
-                "name" to trip.name,
-                "description" to trip.description,
-                "startPoint" to trip.startPoint,
-                "endPoint" to trip.endPoint,
-                "lengthInKm" to trip.lengthInKm,
-                "transportationMode" to trip.transportationMode,
-                "tripDurationInMinutes" to trip.tripDurationInMinutes,
-                "packingList" to trip.packingList,
-                "waypoints" to trip.waypoints,
-                "images" to trip.images
-            )
-
-            db.collection("savedTrips").add(savedTrip)
-                .addOnSuccessListener {
-                    Log.d("Firebase", "Trip saved successfully!")
-                }
-                .addOnFailureListener { e ->
-                    Log.e("Firebase", "Error saving trip", e)
-                }
-        } else {
-            Log.d("Firebase", "Trip is already saved")
-        }
-    }.addOnFailureListener { e ->
-        Log.e("Firebase", "Error checking if trip is saved", e)
     }
 }
 

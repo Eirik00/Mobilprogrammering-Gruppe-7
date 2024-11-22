@@ -41,7 +41,7 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     val db = FirebaseFirestore.getInstance()
 
     LaunchedEffect(Unit) {
-        fetchSavedTrips(db) { trips ->
+        fetchSavedTrips(db, userId) { trips ->
             savedTrips = trips
         }
     }
@@ -50,15 +50,23 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
         showCreateTripPage -> {
             CreateTripPage(onBack = { showCreateTripPage = false }, userId = userId)
         }
+
         showPopularTripsPage -> {
-            PopularTripsPage(tripsViewModel = tripsViewModel, onBack = { showPopularTripsPage = false })
+            PopularTripsPage(
+                tripsViewModel = tripsViewModel,
+                onBack = { showPopularTripsPage = false })
         }
+
         showFindMoreTripsPage -> {
-            FindMoreTripsPage(tripsViewModel = tripsViewModel, onBack = { showFindMoreTripsPage = false })
+            FindMoreTripsPage(
+                tripsViewModel = tripsViewModel,
+                onBack = { showFindMoreTripsPage = false })
         }
+
         showSearchPage -> {
             SearchPage(tripsViewModel, searchQuery) { showSearchPage = false }
         }
+
         else -> {
             Scaffold(
                 floatingActionButton = { AddTripButton { showCreateTripPage = true } }
@@ -68,9 +76,10 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
                     modifier = Modifier
                         .verticalScroll(scrollState)
                         .fillMaxHeight()
-                        .padding(padding)) {
+                        .padding(padding)
+                ) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    SearchSection{ searchText ->
+                    SearchSection { searchText ->
                         searchQuery = searchText
                         showSearchPage = true
                     }
@@ -91,22 +100,24 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveTrip = {
-                saveTripToFirebase(trip)
+                saveTripToFirebase(userId, trip)
                 selectedTrip = null
             }
         )
     }
 }
 
-fun saveTripToFirebase(trip: TripObject) {
+fun saveTripToFirebase(userId: String, trip: TripObject) {
     val db = FirebaseFirestore.getInstance()
+    val tripWithOwner = trip.copy(ownerID = userId)
+
     db.collection("savedTrips")
-        .add(trip)
+        .add(tripWithOwner)
         .addOnSuccessListener { Log.d("SaveTrip", "Trip saved successfully") }
         .addOnFailureListener { e -> Log.e("SaveTrip", "Error saving trip", e) }
 }
 
-fun fetchSavedTrips(db: FirebaseFirestore, onResult: (List<TripObject>) -> Unit) {
+fun fetchSavedTrips(db: FirebaseFirestore, userId: String, onResult: (List<TripObject>) -> Unit) {
     db.collection("savedTrips")
         .addSnapshotListener { snapshots, e ->
             if (e != null) {

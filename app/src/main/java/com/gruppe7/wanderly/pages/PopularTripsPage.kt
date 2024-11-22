@@ -2,6 +2,7 @@ package com.gruppe7.wanderly.pages
 
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,7 @@ import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
 import java.util.Locale
 import androidx.compose.ui.Alignment
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,6 +33,13 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
 
     var tripsWithClicks by remember { mutableStateOf<List<TripObject>>(emptyList()) }
+
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    Log.d("FindMoreTripsPage", "User ID: $userId")
+
+    if (userId == null) {
+        Log.e("FindMoreTripsPage", "User is not logged in.")
+    }
 
     LaunchedEffect(allTrips) {
         val tripsWithUpdatedClicks = allTrips.map { trip ->
@@ -73,22 +82,26 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                     2 -> "🥉"
                     else -> ""
                 }
-                    PopularTripsCard(
-                        trip = trip,
-                        medal = medal,
-                        onClick = { selectedTrip = trip }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+                PopularTripsCard(
+                    trip = trip,
+                    medal = medal,
+                    onClick = { selectedTrip = trip }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
 
     selectedTrip?.let { trip ->
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveTrip = {
-                saveTripToFirebase(trip)
+                if (userId != null) {
+                    saveTripToFirebase(userId, trip)
+                } else {
+                    Log.e("PopularTripsPage", "User ID is null, cannot save trip.")
+                }
                 selectedTrip = null
             }
         )

@@ -62,7 +62,6 @@ class TripsViewModel : ViewModel() {
             "userId" to userId,
             "tripId" to trip.id,
             "name" to trip.name,
-            "type" to trip.type,
             "description" to trip.description,
             "lengthInKm" to trip.lengthInKm,
             "tripDurationInMinutes" to trip.tripDurationInMinutes,

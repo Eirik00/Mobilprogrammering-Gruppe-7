@@ -1,5 +1,6 @@
 package com.gruppe7.wanderly.pages
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,13 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
     }
 
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
+
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    Log.d("FindMoreTripsPage", "User ID: $userId")
+
+    if (userId == null) {
+        Log.e("FindMoreTripsPage", "User is not logged in.")
+    }
 
     Scaffold(
         topBar = {
@@ -65,7 +73,11 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveTrip = {
-                saveTripToFirebase(trip)
+                if (userId != null) {
+                    saveTripToFirebase(userId, trip)
+                } else {
+                    Log.e("SearchPage", "User ID is null, cannot save trip.")
+                }
                 selectedTrip = null
             }
         )
