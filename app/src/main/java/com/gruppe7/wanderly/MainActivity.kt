@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.example.compose.AppTheme
 import com.google.firebase.FirebaseApp
@@ -28,7 +27,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
-            val authViewModel = remember { AuthViewModel(applicationContext) }
+            val authViewModel = remember { AuthViewModel(application) }
             val tripsViewModel = remember { TripsViewModel() }
 
             val userId = authViewModel.user.collectAsState().value?.uid ?: "defaultUserId"

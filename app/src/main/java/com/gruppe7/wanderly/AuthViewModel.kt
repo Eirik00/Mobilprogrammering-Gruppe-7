@@ -1,5 +1,6 @@
 package com.gruppe7.wanderly
 
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
@@ -23,7 +24,7 @@ data class UserData(
     val UUID: String = ""
 )
 
-class AuthViewModel(private val context: Context) : ViewModel() {
+class AuthViewModel(private val application: Application) : ViewModel() {
     private val _firebaseAuth = MutableStateFlow(FirebaseAuth.getInstance())
     val firebaseAuth: StateFlow<FirebaseAuth> = _firebaseAuth
 
@@ -42,7 +43,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
             _isLoggedIn.value = auth.currentUser != null
             _user.value = auth.currentUser
             if(_isLoggedIn.value){
-                _userData.value = loadUserData(context)
+                _userData.value = loadUserData(application)
             }
         }
     }

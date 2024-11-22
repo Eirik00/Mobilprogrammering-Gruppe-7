@@ -96,14 +96,7 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-            onSaveTrip = {
-                if (userId != null) {
-                    saveTripToFirebase(userId, trip)
-                } else {
-                    Log.e("PopularTripsPage", "User ID is null, cannot save trip.")
-                }
-                selectedTrip = null
-            }
+
         )
     }
 }

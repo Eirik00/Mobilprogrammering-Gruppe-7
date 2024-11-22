@@ -79,14 +79,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-            onSaveTrip = {
-                if (userId != null) {
-                    saveTripToFirebase(userId, trip)
-                } else {
-                    Log.e("FindMoreTripsPage", "User ID is null, cannot save trip.")
-                }
-                selectedTrip = null
-            }
+
         )
     }
 }

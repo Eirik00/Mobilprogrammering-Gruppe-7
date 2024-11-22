@@ -99,10 +99,7 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-            onSaveTrip = {
-                saveTripToFirebase(userId, trip)
-                selectedTrip = null
-            }
+
         )
     }
 }
@@ -303,7 +300,10 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
 }
 
 @Composable
-fun TripDialog(trip: TripObject, onDismiss: () -> Unit, onSaveTrip: () -> Unit) {
+fun TripDialog(
+    trip: TripObject,
+    //onSaveOrDelete: () -> Unit,
+    onDismiss: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
 
@@ -326,56 +326,61 @@ fun TripDialog(trip: TripObject, onDismiss: () -> Unit, onSaveTrip: () -> Unit) 
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Description: ${trip.description}", fontSize = 14.sp)
-                Text("Start point: $startAddress", fontSize = 14.sp)
-                Text("End point: $endAddress", fontSize = 14.sp)
-                Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
-                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = trip.name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-                if (trip.waypoints?.isNotEmpty() == true) {
-                    GoogleMapTripView(
-                        startPoint = trip.startPoint,
-                        endPoint = trip.endPoint,
-                        wayPoints = trip.waypoints,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
-                } else {
-                    GoogleMapTripView(
-                        startPoint = trip.startPoint,
-                        endPoint = trip.endPoint,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
+            Text("Description: ${trip.description}", fontSize = 14.sp)
+            Text("Start point: $startAddress", fontSize = 14.sp)
+            Text("End point: $endAddress", fontSize = 14.sp)
+            Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+            Text("Trip duration: ${trip.tripDurationInMinutes} minutes", fontSize = 14.sp)
+
+            if (trip.waypoints.isNotEmpty()) {
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    wayPoints = trip.waypoints,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            } else {
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
+            Row(
+                    modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(onClick = { Log.d("STATE", "Clicked") }) {
+                    Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
                 }
             }
-        },
-        confirmButton = {
-            Button(onClick = {
-                onSaveTrip()
-                onDismiss()
-            }) {
-                Text("Save Trip")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        },
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(16.dp)
-    )
+        }
+    }
 }
 
 

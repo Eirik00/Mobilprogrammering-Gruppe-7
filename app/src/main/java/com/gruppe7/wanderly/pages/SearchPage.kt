@@ -72,14 +72,7 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
         TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
-            onSaveTrip = {
-                if (userId != null) {
-                    saveTripToFirebase(userId, trip)
-                } else {
-                    Log.e("SearchPage", "User ID is null, cannot save trip.")
-                }
-                selectedTrip = null
-            }
+
         )
     }
 }
