@@ -86,21 +86,6 @@ class TripsViewModel : ViewModel() {
             }
     }
 
-    fun fetchSavedTrips() {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("savedTrips")
-            .get()
-            .addOnSuccessListener { result ->
-                val trips = result.map { document ->
-                    document.toObject(TripObject::class.java)
-                }
-                _savedTrips.value = trips
-            }
-            .addOnFailureListener { exception ->
-                Log.e("TripsViewModel", "Error fetching saved trips", exception)
-            }
-    }
-
     init {
         fetchTrips()
     }

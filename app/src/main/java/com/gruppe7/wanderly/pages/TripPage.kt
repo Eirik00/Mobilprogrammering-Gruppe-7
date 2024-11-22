@@ -38,9 +38,10 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var savedTrips by remember { mutableStateOf<List<TripObject>>(emptyList()) }
+    val db = FirebaseFirestore.getInstance()
 
-    LaunchedEffect(userId) {
-        fetchSavedTrips(userId) { trips ->
+    LaunchedEffect(Unit) {
+        fetchSavedTrips(db) { trips ->
             savedTrips = trips
         }
     }
@@ -88,24 +89,37 @@ fun TripPage(tripsViewModel: TripsViewModel, userId: String) {
     selectedTrip?.let { trip ->
         TripDialog(
             trip = trip,
-            onDismiss = { selectedTrip = null }
+            onDismiss = { selectedTrip = null },
+            onSaveTrip = {
+                saveTripToFirebase(trip)
+                selectedTrip = null
+            }
         )
     }
 }
 
-fun fetchSavedTrips(userId: String, onTripsFetched: (List<TripObject>) -> Unit) {
+fun saveTripToFirebase(trip: TripObject) {
     val db = FirebaseFirestore.getInstance()
     db.collection("savedTrips")
-        .whereEqualTo("userId", userId)
-        .get()
-        .addOnSuccessListener { result ->
-            val trips = result.map { document ->
-                document.toObject(TripObject::class.java)
+        .add(trip)
+        .addOnSuccessListener { Log.d("SaveTrip", "Trip saved successfully") }
+        .addOnFailureListener { e -> Log.e("SaveTrip", "Error saving trip", e) }
+}
+
+fun fetchSavedTrips(db: FirebaseFirestore, onResult: (List<TripObject>) -> Unit) {
+    db.collection("savedTrips")
+        .addSnapshotListener { snapshots, e ->
+            if (e != null) {
+                Log.w("FetchSavedTrips", "Listen failed.", e)
+                onResult(emptyList())
+                return@addSnapshotListener
             }
-            onTripsFetched(trips)
-        }
-        .addOnFailureListener { e ->
-            Log.e("Firebase", "Error fetching saved trips", e)
+
+            val trips = snapshots?.mapNotNull { document ->
+                document.toObject(TripObject::class.java).copy(id = document.id)
+            } ?: emptyList()
+
+            onResult(trips)
         }
 }
 
@@ -278,10 +292,7 @@ fun SavedTripCard(trip: TripObject, onClick: () -> Unit) {
 }
 
 @Composable
-fun TripDialog(
-    trip: TripObject,
-    onDismiss: () -> Unit
-) {
+fun TripDialog(trip: TripObject, onDismiss: () -> Unit, onSaveTrip: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
 
@@ -304,60 +315,58 @@ fun TripDialog(
         }
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ){
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ){
-            Text(
-                text = trip.name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Description: ${trip.description}", fontSize = 14.sp)
+                Text("Start point: $startAddress", fontSize = 14.sp)
+                Text("End point: $endAddress", fontSize = 14.sp)
+                Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+                Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+                Text("Trip duration in minutes: ${trip.tripDurationInMinutes}", fontSize = 14.sp)
 
-            Text("Description: ${trip.description}", fontSize = 14.sp)
-            Text("Start point: $startAddress", fontSize = 14.sp)
-            Text("End point: $endAddress", fontSize = 14.sp)
-            Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
-            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-            Text("Trip duration: ${trip.tripDurationInMinutes} minutes", fontSize = 14.sp)
-
-            if (trip.waypoints?.isNotEmpty() == true) {
-                GoogleMapTripView(
-                    startPoint = trip.startPoint,
-                    endPoint = trip.endPoint,
-                    wayPoints = trip.waypoints,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-            } else {
-                GoogleMapTripView(
-                    startPoint = trip.startPoint,
-                    endPoint = trip.endPoint,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text("Close")
+                if (trip.waypoints?.isNotEmpty() == true) {
+                    GoogleMapTripView(
+                        startPoint = trip.startPoint,
+                        endPoint = trip.endPoint,
+                        wayPoints = trip.waypoints,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                } else {
+                    GoogleMapTripView(
+                        startPoint = trip.startPoint,
+                        endPoint = trip.endPoint,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
                 }
             }
-        }
-    }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onSaveTrip()
+                onDismiss()
+            }) {
+                Text("Save Trip")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.padding(16.dp)
+    )
 }
+
 
 @Composable
 fun AddTripButton(onClick: () -> Unit) {
