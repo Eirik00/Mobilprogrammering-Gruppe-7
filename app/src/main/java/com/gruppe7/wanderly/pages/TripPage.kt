@@ -3,14 +3,20 @@ package com.gruppe7.wanderly.pages
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -71,6 +77,7 @@ fun TripPage(
     val context = LocalContext.current
 
     tripsViewModel.fetchTrips()
+    tripsViewModel.loadSavedTripsLocally(context, userId)
 
     Scaffold(
         floatingActionButton = {
@@ -82,8 +89,10 @@ fun TripPage(
             }
         }
     ) { padding ->
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
+                .verticalScroll(scrollState)
                 .fillMaxSize()
                 .padding(padding)
         ) {
@@ -107,7 +116,7 @@ fun TripPage(
 
     // Trip Dialog
     selectedTrip?.let { trip ->
-        TripDetailsDialog(
+        TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveOrDelete = {
@@ -205,41 +214,96 @@ private fun SavedTripsSection(
 }
 
 @Composable
-fun TripDetailsDialog(
+fun TripDialog(
     trip: TripObject,
-    onDismiss: () -> Unit,
-    onSaveOrDelete: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(trip.name) },
-        text = {
-            Column {
-                Text("Description: ${trip.description}")
-                Text("Length: ${trip.lengthInKm} km")
-                Text("Duration: ${trip.tripDurationInMinutes} minutes")
-                // Add other trip details as needed
+    onSaveOrDelete: () -> Unit,
+    onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val geocoder = Geocoder(context, Locale.getDefault())
+
+    var startAddress by remember { mutableStateOf("Loading...") }
+    var endAddress by remember { mutableStateOf("Loading...") }
+
+    LaunchedEffect(trip.startPoint) {
+        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAddressFromGeoPoint(geocoder, trip.startPoint)
+        } else {
+            oldGetAddressFromGeoPoint(geocoder, trip.startPoint)
+        }
+    }
+
+    LaunchedEffect(trip.endPoint) {
+        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            newGetAddressFromGeoPoint(geocoder, trip.endPoint)
+        } else {
+            oldGetAddressFromGeoPoint(geocoder, trip.endPoint)
+        }
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = trip.name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text("Description: ${trip.description}", fontSize = 14.sp)
+            Text("Start point: $startAddress", fontSize = 14.sp)
+            Text("End point: $endAddress", fontSize = 14.sp)
+            Text("Packing list: ${trip.packingList}", fontSize = 14.sp)
+            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
+            Text("Trip duration: ${trip.tripDurationInMinutes} minutes", fontSize = 14.sp)
+
+            if (trip.waypoints.isNotEmpty()) {
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    wayPoints = trip.waypoints,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            } else {
+                GoogleMapTripView(
+                    startPoint = trip.startPoint,
+                    endPoint = trip.endPoint,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = onSaveOrDelete
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
+                Button(onClick = {
+                    onSaveOrDelete()
+                    Log.d("TripDialog", "Save/Delete Trip Clicked!")
+                }) {
+                    Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Close")
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
 fun TripCard(
     trip: TripObject,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val locations = rememberLocationAddresses(trip)
 
@@ -252,7 +316,8 @@ fun TripCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = trip.name,
-                style = MaterialTheme.typography.titleMedium
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
             )
             Text(trip.description)
             Text("From: ${locations.startAddress}")

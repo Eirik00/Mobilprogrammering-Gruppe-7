@@ -1,6 +1,7 @@
 package com.gruppe7.wanderly.pages
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -61,9 +62,10 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
                 Text("No trips found for \"$searchText\"", modifier = Modifier.padding(16.dp))
             } else {
                 filteredTrips.forEach { trip ->
-                    TripCard(trip = trip, onClick = {
-                        selectedTrip = trip
-                    })
+                    TripCard(
+                        trip = trip,
+                        onClick = { selectedTrip = trip }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -72,14 +74,16 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
 
     if(userId !== null) {
         selectedTrip?.let { trip ->
-            TripDetailsDialog(
+            TripDialog(
                 trip = trip,
                 onDismiss = { selectedTrip = null },
                 onSaveOrDelete = {
                     if(trip.savedLocally) {
                         tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                        Toast.makeText(context, "Trip deleted", Toast.LENGTH_SHORT).show()
                     }else {
                         tripsViewModel.saveTripLocally(context, userId, trip)
+                        Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                     }
                 }
             )

@@ -3,6 +3,7 @@ package com.gruppe7.wanderly.pages
 import android.location.Geocoder
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -95,15 +96,18 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     }
 
     selectedTrip?.let { trip ->
-        TripCard(
+        TripDialog(
             trip = trip,
-            onClick = {
+            onSaveOrDelete = {
                 if(trip.savedLocally) {
                     tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                    Toast.makeText(context, "Trip deleted", Toast.LENGTH_SHORT).show()
                 }else {
                     tripsViewModel.saveTripLocally(context, userId, trip)
+                    Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                 }
-            }
+            },
+            onDismiss = { selectedTrip = null }
         )
     }
 }
