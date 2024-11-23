@@ -95,10 +95,9 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     }
 
     selectedTrip?.let { trip ->
-        TripDialog(
+        TripCard(
             trip = trip,
-            onDismiss = { selectedTrip = null },
-            onSaveOrDelete = {
+            onClick = {
                 if(trip.savedLocally) {
                     tripsViewModel.deleteTripLocally(context, userId, trip.id)
                 }else {
@@ -129,17 +128,17 @@ fun PopularTripsCard(trip: TripObject, medal: String, onClick: () -> Unit) {
 
     LaunchedEffect(trip.startPoint) {
         startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
+            newGetAddressFromGeoPoint(geocoder, trip.startPoint)
         } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
+            oldGetAddressFromGeoPoint(geocoder, trip.startPoint)
         }
     }
 
     LaunchedEffect(trip.endPoint) {
         endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
+            newGetAddressFromGeoPoint(geocoder, trip.endPoint)
         } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
+            oldGetAddressFromGeoPoint(geocoder, trip.endPoint)
         }
     }
 

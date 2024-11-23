@@ -68,7 +68,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             allTrips.forEach { trip ->
-                FindMoreTripsCard(
+                TripCard(
                     trip = trip,
                     onClick = { selectedTrip = trip }
                 )
@@ -78,7 +78,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     }
 
     selectedTrip?.let { trip ->
-        TripDialog(
+        TripDetailsDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveOrDelete = {
@@ -89,56 +89,5 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                 }
             }
         )
-    }
-}
-
-@Composable
-fun FindMoreTripsCard(trip: TripObject, onClick: () -> Unit) {
-    val context = LocalContext.current
-    val geocoder = Geocoder(context, Locale.getDefault())
-    val db = FirebaseFirestore.getInstance()
-
-    var startAddress by remember(trip.startPoint) { mutableStateOf("Loading...") }
-    var endAddress by remember(trip.endPoint) { mutableStateOf("Loading...") }
-
-    LaunchedEffect(trip.startPoint) {
-        startAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.startPoint)
-        } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.startPoint)
-        }
-    }
-
-    LaunchedEffect(trip.endPoint) {
-        endAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            newGetAdressFromGeoPoint(geocoder, trip.endPoint)
-        } else {
-            oldGetAdressFromGeoPoint(geocoder, trip.endPoint)
-        }
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable{
-                db.collection("trips")
-                    .document(trip.id)
-                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
-                onClick()
-            },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(trip.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text("Description: ${trip.description}", fontSize = 14.sp)
-            Text("Start point: $startAddress", fontSize = 14.sp)
-            Text("End point: $endAddress", fontSize = 14.sp)
-            Text("Length: ${trip.lengthInKm} Km", fontSize = 14.sp)
-        }
     }
 }

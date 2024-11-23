@@ -39,7 +39,7 @@ import com.gruppe7.wanderly.MainLayout
 
 
 @Composable
-fun LandingPage(paddingValues: PaddingValues) {
+fun LandingPage() {
 
     val scrollState = rememberScrollState()
     Column(
@@ -86,10 +86,6 @@ fun LandingPage(paddingValues: PaddingValues) {
                         textDecoration = TextDecoration.Underline,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    /*CurrentTripRow("Sarpsborg Lysløype", "69%", true)
-                    for (i in 1..5) {
-                        CurrentTripRow("Sarpsborg Lysløype", "Not Started", false)
-                    }*/
                     Button(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally),
@@ -107,123 +103,5 @@ fun LandingPage(paddingValues: PaddingValues) {
                 }
             }
         }
-        // Popular Trips
-        /* Column(){
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ){
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "Popular Trips",
-                        textAlign = TextAlign.Center,
-                        fontSize = 20.sp,
-                        textDecoration = TextDecoration.Underline
-                    )
-                    for(i in 0..5){
-                        PopularTripRow("Oslo Sightseeing")
-                    }
-                    Button(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally),
-                        onClick = { Log.d("State", "Popular Trips Clicked!") },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary,
-                        ),
-                        shape = RoundedCornerShape(10)
-                    ){
-                        Text("See More", fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSecondary)
-                    }
-                }
-            }
-        }
-
-    }*/
-    }
-
-    @Composable
-    fun PopularTripRow(tripName: String) {
-        var isFavorited by remember { mutableStateOf(false) }
-
-        Row(modifier = Modifier
-            .padding(5.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.secondary)
-            .clickable {
-                Log.d("STATE", "$tripName Clicked!") // Reise funksjon
-            }
-            .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                tripName,
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSecondary
-            )
-
-            val iconImageVector = if (isFavorited) {
-                Icons.Filled.Favorite
-            } else {
-                Icons.Filled.FavoriteBorder
-            }
-            Icon(
-                imageVector = iconImageVector,
-                contentDescription = "Favourite Icon",
-                tint = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.small)
-                    .clickable { isFavorited = !isFavorited }
-            )//modifier = Modifier.align(Alignment.CenterVertically)
-        }
-    }
-
-    @Composable
-    fun CurrentTripRow(tripName: String, tripProgress: String, startedBool: Boolean = false) {
-        Row(modifier = Modifier
-            .padding(5.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (startedBool) MaterialTheme.colorScheme.tertiary
-                else MaterialTheme.colorScheme.secondary
-            )
-            .clickable {
-                Log.d("STATE", "$tripName Clicked!") // Reise funksjon
-            }
-            .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                tripName, modifier = Modifier.weight(1f), color = if (startedBool)
-                    MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary
-            )
-            Text(
-                tripProgress,
-                modifier = Modifier.align(Alignment.CenterVertically),
-                color = if (startedBool)
-                    MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSecondary
-            )
-        }
-    }
-
-
-    //@Preview(showBackground = true, showSystemUi = true)
-    @Composable
-    fun LandingPagePreview() {
-        AppTheme(highContrast = true) {
-            MainLayout { innerPadding, selectedItem,_ ->
-                LandingPage(innerPadding)
-            }
-        }
     }
 }
-

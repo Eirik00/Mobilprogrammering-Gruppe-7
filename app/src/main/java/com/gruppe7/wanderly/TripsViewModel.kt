@@ -86,7 +86,7 @@ class TripsViewModel : ViewModel() {
         fetchTrips()
     }
 
-    private fun fetchTrips() {
+    fun fetchTrips() {
         viewModelScope.launch {
             try {
                 _tripsState.value = TripsFetchState.Loading

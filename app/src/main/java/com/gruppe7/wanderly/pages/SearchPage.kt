@@ -61,7 +61,7 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
                 Text("No trips found for \"$searchText\"", modifier = Modifier.padding(16.dp))
             } else {
                 filteredTrips.forEach { trip ->
-                    SavedTripCard(trip = trip, onClick = {
+                    TripCard(trip = trip, onClick = {
                         selectedTrip = trip
                     })
                     Spacer(modifier = Modifier.height(8.dp))
@@ -72,7 +72,7 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
 
     if(userId !== null) {
         selectedTrip?.let { trip ->
-            TripDialog(
+            TripDetailsDialog(
                 trip = trip,
                 onDismiss = { selectedTrip = null },
                 onSaveOrDelete = {

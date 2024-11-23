@@ -45,7 +45,7 @@ import com.google.maps.PendingResult
 
 
 @Composable
-fun MapPage(paddingValues: PaddingValues){
+fun MapPage(){
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
@@ -240,12 +240,3 @@ fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
         }
     }
 
-@Preview(showBackground = true)
-@Composable
-fun MapPagePreview() {
-    AppTheme {
-        MainLayout { innerPadding, selectedItem,_ ->
-            MapPage(innerPadding)
-        }
-    }
-}

@@ -9,6 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.compose.AppTheme
 import com.google.firebase.FirebaseApp
@@ -17,6 +20,7 @@ import com.gruppe7.wanderly.pages.MapPage
 import com.gruppe7.wanderly.pages.ProfilePage
 import com.gruppe7.wanderly.pages.SettingsPage
 import com.gruppe7.wanderly.pages.TripPage
+import com.gruppe7.wanderly.pages.tripNavigationGraph
 
 
 class MainActivity : ComponentActivity() {
@@ -37,20 +41,33 @@ class MainActivity : ComponentActivity() {
                 highContrast = settingsViewModel.highContrast.collectAsState().value
             ) {
                 Surface(color = MaterialTheme.colorScheme.surface) {
-                    MainLayout(authViewModel) { innerPadding, selectedIndex, loginMode ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding)
-                        ) {
-                            when (selectedIndex) {
-                                0 -> LandingPage(innerPadding)
-                                1 -> TripPage(tripsViewModel, userId)
-                                2 -> MapPage(innerPadding)
-                                3 -> ProfilePage(authViewModel, tripsViewModel)
-                                4 -> SettingsPage(settingsViewModel)
-                                5 -> Login(loginMode ?: "none", authViewModel)
-                                else -> Text("No page for index: $selectedIndex")
+                    MainLayout(
+                        authViewModel = authViewModel,
+                        navController = navController
+                    ) { innerPadding ->
+                        NavHost(
+                            navController = navController,
+                            startDestination = "home",
+                            modifier = Modifier.padding(innerPadding)
+                        ){
+                            composable("home") {
+                                LandingPage()
+                            }
+                            tripNavigationGraph(navController, tripsViewModel, userId)
+                            composable("map") {
+                                MapPage()
+                            }
+                            composable("profile") {
+                                ProfilePage(authViewModel, tripsViewModel)
+                            }
+                            composable("settings") {
+                                SettingsPage(settingsViewModel)
+                            }
+                            composable("home/login/{mode}") { backStackEntry ->
+                                Login(
+                                    mode = backStackEntry.arguments?.getString("mode") ?: "none",
+                                    authViewModel = authViewModel
+                                )
                             }
                         }
                     }
@@ -61,25 +78,38 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainLayout(authViewModel: AuthViewModel? = null, content: @Composable (PaddingValues, Int, String?) -> Unit) {
-    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
-    var mode by rememberSaveable { mutableStateOf("none") }
-
-    fun navigateToLogin(modestr: String) {
-        selectedItem = 5
-        mode = modestr
+fun MainLayout(
+    authViewModel: AuthViewModel,
+    navController: NavController,
+    content: @Composable (PaddingValues) -> Unit
+) {
+    fun navigateToLogin(mode: String) {
+        navController.navigate("home/login/$mode")
     }
 
     Scaffold(
-        topBar = { if(selectedItem != 2){ Header(authViewModel, onLoginRegisterClicked = ::navigateToLogin) }},
+        topBar = {
+            if (navController.currentDestination?.route != "map") {
+                Header(
+                    authViewModel = authViewModel,
+                    onLoginRegisterClicked = ::navigateToLogin
+                )
+            }
+        },
         bottomBar = {
             Navbar(
-                selectedItem = selectedItem,
-                onItemSelected = {index -> selectedItem = index}
+                navController = navController,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo("home") { saveState = true }
+                        // Avoid multiple copies of the same destination
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
     ) { innerPadding ->
-        content(innerPadding, selectedItem, mode)
+        content(innerPadding)
     }
 }
-

@@ -13,6 +13,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.text.capitalize
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import java.util.Locale
 
 // Header Composable
 @Composable
@@ -78,20 +82,32 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: (String) -> Un
 
 // Navbar Composable
 @Composable
-fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
-    val items = listOf("Home", "Trips", "Map", "Profile", "Settings")
-
+fun Navbar(
+    navController: NavController,
+    onNavigate: (String) -> Unit
+) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.primary
     ) {
-        items.forEachIndexed { index, item ->
+        val items = listOf(
+            "home" to R.drawable.ic_home,
+            "trips" to R.drawable.ic_trip,
+            "map" to R.drawable.ic_map,
+            "profile" to R.drawable.ic_profile_navbar,
+            "settings" to R.drawable.ic_settings
+        )
+
+        val currentBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = currentBackStackEntry?.destination?.route
+
+        items.forEach { (route, icon) ->
             NavigationBarItem(
-                icon = {
-                    Icon(painterResource(id = getIconResource(item)), contentDescription = item)
-                },
-                label = { Text(item) },
-                selected = selectedItem == index,
-                onClick = { onItemSelected(index) },
+                icon = { Icon(painterResource(id = icon), contentDescription = route) },
+                label = { Text(route.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                }) },
+                selected = currentRoute == route || currentRoute?.startsWith(route) == true,
+                onClick = { onNavigate(route) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.secondary,
                     unselectedIconColor = MaterialTheme.colorScheme.onPrimary,
@@ -100,17 +116,5 @@ fun Navbar(selectedItem: Int, onItemSelected: (Int) -> Unit) {
                 )
             )
         }
-    }
-}
-
-// Utility function to get the corresponding icon resource for each navigation item
-private fun getIconResource(item: String): Int {
-    return when (item) {
-        "Home" -> R.drawable.ic_home
-        "Trips" -> R.drawable.ic_trip
-        "Map" -> R.drawable.ic_map
-        "Profile" -> R.drawable.ic_profile_navbar
-        "Settings" -> R.drawable.ic_settings
-        else -> R.drawable.ic_default
     }
 }
