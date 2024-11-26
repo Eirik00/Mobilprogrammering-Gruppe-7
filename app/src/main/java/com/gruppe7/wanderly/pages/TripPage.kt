@@ -346,6 +346,11 @@ fun TripDialog(
                         }
                     }
                 }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
                 TextButton(onClick = onDismiss) {
                     Text("Close")
                 }
