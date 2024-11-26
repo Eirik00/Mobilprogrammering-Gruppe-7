@@ -1,7 +1,11 @@
 package com.gruppe7.wanderly.pages
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -16,8 +20,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import com.android.identity.util.UUID
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
@@ -239,6 +246,21 @@ fun GoogleMapView(
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val locationPermissionRequest = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        // Handle Permission result
+    }
+
+    LaunchedEffect(Unit) {
+        locationPermissionRequest.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
 
     AndroidView(
         modifier = Modifier
@@ -292,6 +314,21 @@ fun GoogleMapView(
             googleMap.setOnMapLongClickListener {
                 onRemoveLastMarker()
                 updateMarkers()
+            }
+
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                googleMap.isMyLocationEnabled = true
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    location?.let {
+                        val userLatLng = LatLng(it.latitude, it.longitude)
+                        val cameraPosition = CameraPosition.Builder()
+                            .target(userLatLng)
+                            .zoom(15f)
+                            .build()
+                        googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+                    }
+                }
             }
         }
     }
