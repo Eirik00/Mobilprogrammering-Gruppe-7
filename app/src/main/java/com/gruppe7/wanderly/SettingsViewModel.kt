@@ -1,8 +1,10 @@
 package com.gruppe7.wanderly
 
 import android.content.Context
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,6 +60,22 @@ class SettingsViewModel(isDarkTheme: Boolean, private val firestore: FirebaseFir
                 .addOnFailureListener {
                     onComplete(false)
                 }
+        }
+    }
+
+    fun deleteUserProfile(context: Context, userId: String, onSuccess: (Boolean) -> Unit) {
+        try {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.delete()?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess(true)
+                } else {
+                    onSuccess(false)
+                }
+            }
+        } catch (e: Exception) {
+            onSuccess(false)
+            Toast.makeText(context, "Failed to delete profile: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 }

@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -21,6 +25,8 @@ fun SettingsPage(
     context: Context,
     userId: String
 ) {
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,6 +83,13 @@ fun SettingsPage(
             ) {
                 Text("Delete All My Trips")
             }
+
+            Button(
+                onClick = { showDeleteConfirmationDialog = true },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Delete My Profile")
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -84,7 +97,39 @@ fun SettingsPage(
         // App Version Display
         AppVersionDisplay(AppVersion)
     }
+
+    if (showDeleteConfirmationDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            title = { Text(text = "Confirm Deletion") },
+            text = { Text(text = "Are you sure you want to delete your profile? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        settingsViewModel.deleteUserProfile(context, userId) { success ->
+                            if (success) {
+                                Toast.makeText(context, "Profile deleted successfully.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Failed to delete profile.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        showDeleteConfirmationDialog = false
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteConfirmationDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 fun SettingToggle(titleName: String, settingToggle: Boolean, onToggle: (Boolean) -> Unit) {
