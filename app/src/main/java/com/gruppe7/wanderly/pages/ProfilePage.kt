@@ -30,13 +30,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
+fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, navController: NavController) {
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val userInfo = authViewModel.userData.collectAsState().value
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
@@ -45,7 +47,8 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
     var userPubTrips by remember { mutableStateOf(listOf<TripObject>()) }
 
     LaunchedEffect(userInfo.UUID) {
-        coroutineScope.launch {
+        if (isLoggedIn) {
+            Log.d("STATE", "user id: ${userInfo.UUID}")
             userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
         }
     }
@@ -75,109 +78,132 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Profile Image
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable { launcher.launch("image/*") },
-            contentAlignment = Alignment.Center
-        ) {
-            if (profileBitmap != null) {
-                Image(
-                    painter = BitmapPainter(profileBitmap),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.size(120.dp)
+        if (isLoggedIn) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable { launcher.launch("image/*") },
+                contentAlignment = Alignment.Center
+            ) {
+                if (profileBitmap != null) {
+                    Image(
+                        painter = BitmapPainter(profileBitmap),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.size(120.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Default Profile Picture",
+                        modifier = Modifier.size(120.dp),
+                        tint = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // User Information
+            Text(
+                text = userInfo.username,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = userInfo.email,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Utforsker. Naturelsker. Alltid klar for et eventyr!",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Published Trips Section
+            Text(
+                text = "Published Trips",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 8.dp),
+                textAlign = TextAlign.Start
+            )
+
+            userPubTrips.forEach { trip ->
+                PublishedTripRow(
+                    trip = trip,
+                    onTripClick = { selectedTrip = trip }
                 )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Default Profile Picture",
-                    modifier = Modifier.size(120.dp),
-                    tint = Color.White
-                )
+            }
+        } else {
+            // Content for guest users
+            Text(
+                text = "Please log in to access your profile.",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Button(
+                onClick = { navController.navigate("home/login/Log in") },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Login")
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // User Information
-        Text(
-            text = userInfo.username,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = userInfo.email,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Utforsker. Naturelsker. Alltid klar for et eventyr!",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Published Trips Section
-        Text(
-            text = "Published Trips",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, bottom = 8.dp),
-            textAlign = TextAlign.Start
-        )
-
-        userPubTrips.forEach { trip ->
-            PublishedTripRow(
+        // Trip Dialog
+        selectedTrip?.let { trip ->
+            TripDialog(
                 trip = trip,
-                onTripClick = { selectedTrip = trip }
+                onDismiss = { selectedTrip = null },
+                onSaveOrDelete = {
+                    coroutineScope.launch {
+                        if (trip.savedLocally) {
+                            tripsViewModel.deleteTripLocally(context, userInfo.UUID, trip.id)
+                        } else {
+                            tripsViewModel.saveTripLocally(context, userInfo.UUID, trip)
+                        }
+                        selectedTrip = null
+                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                    }
+                },
+                onDeleteFromFirebase = {
+                    coroutineScope.launch {
+                        if (trip.ownerID == userInfo.UUID) {
+                            tripsViewModel.deleteTripFromFirebase(context, userInfo.UUID, trip.id)
+                            Toast.makeText(
+                                context,
+                                "Trip deleted from Firebase",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "You are not the owner of this trip",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                },
+                showDeleteButton = true
             )
         }
-    }
-
-    // Trip Dialog
-    selectedTrip?.let { trip ->
-        TripDialog(
-            trip = trip,
-            onDismiss = { selectedTrip = null },
-            onSaveOrDelete = {
-                coroutineScope.launch {
-                    if (trip.savedLocally) {
-                        tripsViewModel.deleteTripLocally(context, userInfo.UUID, trip.id)
-                    } else {
-                        tripsViewModel.saveTripLocally(context, userInfo.UUID, trip)
-                    }
-                    selectedTrip = null
-                    userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
-                }
-            },
-            onDeleteFromFirebase = {
-                coroutineScope.launch {
-                    if (trip.ownerID == userInfo.UUID) {
-                        tripsViewModel.deleteTripFromFirebase(context, userInfo.UUID, trip.id)
-                        Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
-                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
-                    } else {
-                        Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            },
-            showDeleteButton = true
-        )
     }
 }
 
@@ -201,3 +227,4 @@ fun PublishedTripRow(trip: TripObject, onTripClick: (TripObject) -> Unit) {
         )
     }
 }
+

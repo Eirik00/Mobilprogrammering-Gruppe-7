@@ -14,6 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.BuildConfig
 import com.gruppe7.wanderly.SettingsViewModel
 
@@ -22,9 +24,12 @@ const val AppVersion = BuildConfig.VERSION_NAME
 @Composable
 fun SettingsPage(
     settingsViewModel: SettingsViewModel,
+    authViewModel: AuthViewModel,
     context: Context,
+    navController: NavController,
     userId: String
 ) {
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -64,31 +69,43 @@ fun SettingsPage(
                     settingsViewModel.toggleHighContrast()
                 }
             )
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.onSurface,
-                thickness = 1.dp
-            )
-            // Delete All Trips Button
-            Button(
-                onClick = {
-                    settingsViewModel.deleteAllUserTrips(context, userId) { success ->
-                        if (success) {
-                            Toast.makeText(context, "All trips deleted successfully!", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(context, "Failed to delete trips.", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Delete All My Trips")
-            }
 
-            Button(
-                onClick = { showDeleteConfirmationDialog = true },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Delete My Profile")
+            if (isLoggedIn) {
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    thickness = 1.dp
+                )
+                // Delete All Trips Button
+                Button(
+                    onClick = {
+                        settingsViewModel.deleteAllUserTrips(context, userId) { success ->
+                            if (success) {
+                                Toast.makeText(
+                                    context,
+                                    "All trips deleted successfully!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to delete trips.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Delete All My Trips")
+                }
+
+                Button(
+                    onClick = { showDeleteConfirmationDialog = true },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Delete My Profile")
+                }
             }
         }
 

@@ -57,11 +57,17 @@ class MainActivity : ComponentActivity() {
                                 MapPage()
                             }
                             composable("profile") {
-                                ProfilePage(authViewModel, tripsViewModel)
+                                ProfilePage(authViewModel, tripsViewModel, navController)
                             }
                             composable("settings") {
                                 val context = LocalContext.current
-                                SettingsPage(settingsViewModel = settingsViewModel, context = context, userId = userId)
+                                SettingsPage(
+                                    settingsViewModel = settingsViewModel,
+                                    authViewModel = authViewModel,
+                                    navController = navController,
+                                    context = context,
+                                    userId = userId
+                                )
                             }
                             composable("home/login/{mode}") { backStackEntry ->
                                 Login(
