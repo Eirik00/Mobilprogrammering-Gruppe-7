@@ -28,7 +28,7 @@ data class TripObject(
     val clickCounter: Int = 0,
     val ownerID: String = "",
     var savedLocally: Boolean = false,
-    val started: Boolean = false,
+    var started: Boolean = false,
 )
 
 sealed class TripsFetchState {
@@ -38,6 +38,8 @@ sealed class TripsFetchState {
 }
 
 class TripsViewModel : ViewModel() {
+    private val firestore = FirebaseFirestore.getInstance()
+
     private val _tripsState = MutableStateFlow<TripsFetchState>(TripsFetchState.Loading)
     val tripsState: StateFlow<TripsFetchState> = _tripsState
 
@@ -80,6 +82,27 @@ class TripsViewModel : ViewModel() {
         editor.remove("${userId}_$tripId")
         editor.apply()
         loadSavedTripsLocally(context, userId)
+    }
+
+    fun deleteTripFromFirebase(context: Context, userId: String, tripId: String) {
+        deleteTripLocally(context, userId, tripId)
+
+        val tripRef = firestore.collection("trips").document(tripId)
+        tripRef.delete()
+            .addOnSuccessListener {
+                Log.d("TripsViewModel", "Trip deleted successfully from Firebase")
+            }
+            .addOnFailureListener { e ->
+                Log.e("TripsViewModel", "Error deleting trip: $e")
+            }
+    }
+
+    fun startOrStopTrip(context: Context, trip: TripObject, userId: String): Boolean {
+        trip.started = !trip.started
+        saveTripLocally(context = context, userId, trip)
+        loadSavedTripsLocally(context, userId)
+
+        return trip.started
     }
 
     init {

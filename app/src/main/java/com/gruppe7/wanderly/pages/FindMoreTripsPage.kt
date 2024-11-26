@@ -1,18 +1,13 @@
 package com.gruppe7.wanderly.pages
 
-import android.location.Geocoder
-import android.os.Build
 import android.util.Log
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,10 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
-import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +29,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     Log.d("FindMoreTripsPage", "User ID: $userId")
@@ -78,16 +73,27 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     }
 
     selectedTrip?.let { trip ->
-        TripDetailsDialog(
+        TripDialog(
             trip = trip,
             onDismiss = { selectedTrip = null },
             onSaveOrDelete = {
                 if(trip.savedLocally) {
                     tripsViewModel.deleteTripLocally(context, userId, trip.id)
+                    Toast.makeText(context, "Trip deleted", Toast.LENGTH_SHORT).show()
                 }else {
                     tripsViewModel.saveTripLocally(context, userId, trip)
+                    Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                 }
-            }
+            },
+            onDeleteFromFirebase =  {
+                if (trip.ownerID == userId) {
+                    tripsViewModel.deleteTripFromFirebase(context,userId, trip.id)
+                    Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
+                }
+            },
+            showDeleteButton = false
         )
     }
 }

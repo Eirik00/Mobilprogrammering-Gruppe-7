@@ -60,17 +60,29 @@ fun Header(authViewModel: AuthViewModel?, onLoginRegisterClicked: (String) -> Un
                     contentDescription = "Profile Picture",
                 )
                 DropdownMenu(
+                    modifier = Modifier
+                        .width(250.dp)
+                        .offset(x = 16.dp),
                     expanded = profileExpanded,
-                    onDismissRequest = { profileExpanded = false }
+                    onDismissRequest = {
+                        profileExpanded = false
+                    }
                 ) {
                     menuList.forEach {
-                        DropdownMenuItem( onClick = {
-                            if(it == "Log in"|| it == "Register"){
-                                onLoginRegisterClicked(it)
-                            }else{
-                                authViewModel.signOut()
-                            } },
-                            text = {Text(text=it)})
+                        DropdownMenuItem(
+                            onClick = {
+                                if(it == "Log in"|| it == "Register"){
+                                    onLoginRegisterClicked(it)
+                                }else{
+                                    authViewModel.signOut()
+                                } },
+                            text = {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        )
                     }
                 }
             }
