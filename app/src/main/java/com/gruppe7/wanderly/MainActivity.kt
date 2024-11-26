@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                                 MapPage()
                             }
                             composable("profile") {
-                                ProfilePage(authViewModel, tripsViewModel)
+                                ProfilePage(authViewModel, tripsViewModel, navController)
                             }
                             composable("settings") {
                                 SettingsPage(settingsViewModel)

@@ -83,7 +83,17 @@ fun TripPage(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("trips/create") },
+                onClick = {
+                    if (userId == "defaultUserId") { // Check if the user is logged in
+                        Toast.makeText(
+                            context,
+                            "You must be logged in to create a trip.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        navController.navigate("trips/create")
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Text("+", color = MaterialTheme.colorScheme.onPrimary)

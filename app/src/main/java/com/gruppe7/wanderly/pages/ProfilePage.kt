@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
 import com.example.compose.AppTheme
 import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.MainLayout
@@ -41,7 +42,8 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
+fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, navController: NavController) {
+    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
     val userInfo = authViewModel.userData.collectAsState().value
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
@@ -50,8 +52,10 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
     var userPubTrips by remember { mutableStateOf(listOf<TripObject>())}
 
     LaunchedEffect(userInfo.UUID) {
-        Log.d("STATE", "user id: ${userInfo.UUID}")
-        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+        if (isLoggedIn) {
+            Log.d("STATE", "user id: ${userInfo.UUID}")
+            userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+        }
     }
 
     // Launcher to select image from gallery
@@ -70,91 +74,107 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel) {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Profile image
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable {
-                    // Open image picker when clicked
-                    launcher.launch("image/*")
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            if (profileImageUri != null) {
-                val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, profileImageUri)
-                Image(
-                    painter = BitmapPainter(bitmap.asImageBitmap()),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.size(120.dp)
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.size(120.dp),
-                    tint = Color.White
-                )
+
+
+        if (isLoggedIn) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable {
+                        // Open image picker when clicked
+                        launcher.launch("image/*")
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (profileImageUri != null) {
+                    val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, profileImageUri)
+                    Image(
+                        painter = BitmapPainter(bitmap.asImageBitmap()),
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.size(120.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Profile Picture",
+                        modifier = Modifier.size(120.dp),
+                        tint = Color.White
+                    )
+                }
             }
-        }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
 
-        Spacer(modifier = Modifier.height(16.dp))
+            // Name
+            Text(
+                text = userInfo.username,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
 
 
-        // Name
-        Text(
-            text = userInfo.username,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            textAlign = TextAlign.Center
-        )
+            Spacer(modifier = Modifier.height(8.dp))
 
 
-        Spacer(modifier = Modifier.height(8.dp))
+            // Email
+            Text(
+                text = userInfo.email,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center
+            )
 
 
-        // Email
-        Text(
-            text = userInfo.email,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
-            textAlign = TextAlign.Center
-        )
+            Spacer(modifier = Modifier.height(8.dp))
 
 
-        Spacer(modifier = Modifier.height(8.dp))
+            // Description
+            Text(
+                text = "Utforsker. Naturelsker. Alltid klar for et eventyr!",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
 
 
-        // Description
-        Text(
-            text = "Utforsker. Naturelsker. Alltid klar for et eventyr!",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
+            Spacer(modifier = Modifier.height(24.dp))
 
 
-        Spacer(modifier = Modifier.height(24.dp))
+            // Published Trips Section
+            Text(
+                text = "Published Trips",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 8.dp),
+                textAlign = TextAlign.Start
+            )
 
-
-        // Published Trips Section
-        Text(
-            text = "Published Trips",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, bottom = 8.dp),
-            textAlign = TextAlign.Start
-        )
-
-        userPubTrips.forEach { trip ->
-            PublishedTripRow(trip.name)
+            userPubTrips.forEach { trip ->
+                PublishedTripRow(trip.name)
+            }
+        } else {
+            // Content for guest users
+            Text(
+                text = "Please log in to access your profile.",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Button(
+                onClick = { navController.navigate("home/login/Log in") },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Login")
+            }
         }
     }
 }
