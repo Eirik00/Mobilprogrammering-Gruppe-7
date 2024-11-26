@@ -3,16 +3,16 @@ package com.gruppe7.wanderly.pages
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -44,15 +44,15 @@ enum class TransportationMode(val displayName: String) {
 fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: String) {
     var tripName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var packingList by remember { mutableStateOf(mutableListOf<String>()) }
+    var packingList by remember { mutableStateOf(listOf<String>()) }
     var lengthInKm by remember { mutableStateOf<Double?>(null) }
     var tripDurationInMinutes by remember { mutableStateOf<Int?>(null) }
-    var waypoints by remember { mutableStateOf(mutableListOf<LatLng>()) }
-    var images by remember { mutableStateOf(mutableListOf<String>()) }
+    var images by remember { mutableStateOf(listOf<String>()) }
     var selectedMode by remember { mutableStateOf(TransportationMode.WALK) }
     var startLatLng by remember { mutableStateOf<LatLng?>(null) }
     var endLatLng by remember { mutableStateOf<LatLng?>(null) }
 
+    var waypoints by remember { mutableStateOf(listOf<LatLng>()) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
@@ -63,7 +63,7 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
                 title = { Text("Create new trip") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -117,7 +117,7 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
                     label = { Text("Mode of Transport") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
                     readOnly = true,
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -129,7 +129,7 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    TransportationMode.values().forEach { mode ->
+                    TransportationMode.entries.forEach { mode ->
                         DropdownMenuItem(
                             text = { Text(mode.displayName) },
                             onClick = {
@@ -186,12 +186,12 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
                     } else if (endLatLng == null) {
                         endLatLng = latLng
                     } else {
-                        waypoints.add(latLng)
+                        waypoints = waypoints + latLng
                     }
                 },
                 onRemoveLastMarker = {
                     if (waypoints.isNotEmpty()) {
-                        waypoints.removeLast()
+                        waypoints = waypoints.dropLast(1)
                     } else if (endLatLng != null) {
                         endLatLng = null
                     } else if (startLatLng != null) {
@@ -250,14 +250,14 @@ fun GoogleMapView(
     val locationPermissionRequest = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { perms ->
-        // Handle Permission result
+        Log.d("permission", perms.toString())
     }
 
     LaunchedEffect(Unit) {
         locationPermissionRequest.launch(
             arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
     }

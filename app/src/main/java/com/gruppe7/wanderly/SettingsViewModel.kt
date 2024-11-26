@@ -40,7 +40,6 @@ class SettingsViewModel(isDarkTheme: Boolean, private val firestore: FirebaseFir
                         context.getSharedPreferences("savedLocallyTrips", Context.MODE_PRIVATE)
                     val editor = sharedPreferences.edit()
 
-                    // Marker alle dokumenter for sletting
                     querySnapshot.documents.forEach { document ->
                         batch.delete(document.reference)
                         editor.remove("${userId}_${document.id}")
@@ -48,7 +47,6 @@ class SettingsViewModel(isDarkTheme: Boolean, private val firestore: FirebaseFir
 
                     editor.apply()
 
-                    // Utfør batch-sletting
                     batch.commit()
                         .addOnSuccessListener {
                             onComplete(true)
@@ -63,7 +61,7 @@ class SettingsViewModel(isDarkTheme: Boolean, private val firestore: FirebaseFir
         }
     }
 
-    fun deleteUserProfile(context: Context, userId: String, onSuccess: (Boolean) -> Unit) {
+    fun deleteUserProfile(context: Context, onSuccess: (Boolean) -> Unit) {
         try {
             val user = FirebaseAuth.getInstance().currentUser
             user?.delete()?.addOnCompleteListener { task ->

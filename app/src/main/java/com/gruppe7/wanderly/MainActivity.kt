@@ -13,7 +13,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.compose.AppTheme
+import com.gruppe7.wanderly.ui.theme.AppTheme
 import com.google.firebase.FirebaseApp
 import com.gruppe7.wanderly.pages.LandingPage
 import com.gruppe7.wanderly.pages.MapPage
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
         setContent {
             val navController = rememberNavController()
-            val isDarkTheme = isSystemInDarkTheme() // Henter ut telefonens darkmode bool
+            val isDarkTheme = isSystemInDarkTheme()
             val settingsViewModel = remember { SettingsViewModel(isDarkTheme = isDarkTheme) }
             val authViewModel = remember { AuthViewModel(application) }
             val tripsViewModel = remember { TripsViewModel() }
@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
                                 SettingsPage(
                                     settingsViewModel = settingsViewModel,
                                     authViewModel = authViewModel,
-                                    navController = navController,
                                     context = context,
                                     userId = userId
                                 )

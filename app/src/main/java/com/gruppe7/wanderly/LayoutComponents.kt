@@ -13,7 +13,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.text.capitalize
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import java.util.Locale

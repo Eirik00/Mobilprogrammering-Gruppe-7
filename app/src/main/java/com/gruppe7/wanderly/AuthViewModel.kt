@@ -21,12 +21,11 @@ import kotlinx.coroutines.withContext
 data class UserData(
     val username: String = "",
     val email: String = "",
-    val UUID: String = ""
+    val uuid: String = ""
 )
 
 class AuthViewModel(private val application: Application) : ViewModel() {
     private val _firebaseAuth = MutableStateFlow(FirebaseAuth.getInstance())
-    val firebaseAuth: StateFlow<FirebaseAuth> = _firebaseAuth
 
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> get() = _isLoggedIn
@@ -112,7 +111,7 @@ class AuthViewModel(private val application: Application) : ViewModel() {
                 _userData.value = UserData(
                     username = username,
                     email = email,
-                    UUID = userId
+                    uuid = userId
                 )
                 saveUserData(context, _userData.value)
 
@@ -164,7 +163,7 @@ private fun loadUserData(context: Context): UserData{
     return UserData(
         username = sharedPreferences.getString("username", "") ?: "",
         email = sharedPreferences.getString("email", "") ?: "",
-        UUID = sharedPreferences.getString("UUID", "") ?: ""
+        uuid = sharedPreferences.getString("UUID", "") ?: ""
     )
 }
 
@@ -173,7 +172,7 @@ private fun saveUserData(context: Context, userData: UserData) {
     with(sharedPreferences.edit()) {
         putString("username", userData.username)
         putString("email", userData.email)
-        putString("UUID", userData.UUID)
+        putString("UUID", userData.uuid)
         apply()
     }
 }

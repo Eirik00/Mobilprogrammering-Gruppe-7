@@ -1,8 +1,11 @@
+@file:Suppress("DEPRECATION")
+
 package com.gruppe7.wanderly.pages
 
 import android.content.Context
-import android.content.Intent
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -40,6 +43,7 @@ import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
 import kotlinx.coroutines.launch
 
+
 @Composable
 fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, navController: NavController) {
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
@@ -49,16 +53,16 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
     val coroutineScope = rememberCoroutineScope()
 
     var description by remember {
-        mutableStateOf(loadProfileDescription(context, userInfo.UUID))
+        mutableStateOf(loadProfileDescription(context, userInfo.uuid))
     }
     var isEditingDescription by remember { mutableStateOf(false) }
 
     var userPubTrips by remember { mutableStateOf(listOf<TripObject>()) }
 
-    LaunchedEffect(userInfo.UUID) {
+    LaunchedEffect(userInfo.uuid) {
         if (isLoggedIn) {
-            Log.d("STATE", "user id: ${userInfo.UUID}")
-            userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+            Log.d("STATE", "user id: ${userInfo.uuid}")
+            userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.uuid)
         }
     }
 
@@ -72,7 +76,12 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
     val profileBitmap = remember(profileImageUri) {
         profileImageUri?.let { uri ->
             try {
-                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)?.asImageBitmap()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val source = ImageDecoder.createSource(context.contentResolver, uri)
+                    ImageDecoder.decodeBitmap(source)
+                } else {
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                }
             } catch (e: Exception) {
                 Log.e("ProfilePage", "Failed to load image: ${e.message}")
                 null
@@ -98,7 +107,7 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
             ) {
                 if (profileBitmap != null) {
                     Image(
-                        painter = BitmapPainter(profileBitmap),
+                        painter = BitmapPainter(profileBitmap.asImageBitmap()),
                         contentDescription = "Profile Picture",
                         modifier = Modifier.size(120.dp)
                     )
@@ -153,7 +162,7 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
                     IconButton(
                         onClick = {
                             isEditingDescription = false
-                            saveProfileDescription(context, userInfo.UUID, description)
+                            saveProfileDescription(context, userInfo.uuid, description)
                         }
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = "Save Description")
@@ -219,20 +228,20 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
             onSaveOrDelete = {
                 coroutineScope.launch {
                     if (trip.savedLocally) {
-                        tripsViewModel.deleteTripLocally(context, userInfo.UUID, trip.id)
+                        tripsViewModel.deleteTripLocally(context, userInfo.uuid, trip.id)
                     } else {
-                        tripsViewModel.saveTripLocally(context, userInfo.UUID, trip)
+                        tripsViewModel.saveTripLocally(context, userInfo.uuid, trip)
                     }
                     selectedTrip = null
-                    userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                    userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.uuid)
                 }
             },
             onDeleteFromFirebase = {
                 coroutineScope.launch {
-                    if (trip.ownerID == userInfo.UUID) {
-                        tripsViewModel.deleteTripFromFirebase(context, userInfo.UUID, trip.id)
+                    if (trip.ownerID == userInfo.uuid) {
+                        tripsViewModel.deleteTripFromFirebase(context, userInfo.uuid, trip.id)
                         Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
-                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.uuid)
                     } else {
                         Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
                     }

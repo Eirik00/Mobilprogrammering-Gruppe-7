@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +28,6 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     Log.d("FindMoreTripsPage", "User ID: $userId")
@@ -45,7 +43,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                 title = { Text("Find more trips") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )

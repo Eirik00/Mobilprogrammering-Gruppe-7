@@ -14,7 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.gruppe7.wanderly.AuthViewModel
 import com.gruppe7.wanderly.BuildConfig
 import com.gruppe7.wanderly.SettingsViewModel
@@ -26,7 +25,6 @@ fun SettingsPage(
     settingsViewModel: SettingsViewModel,
     authViewModel: AuthViewModel,
     context: Context,
-    navController: NavController,
     userId: String
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
@@ -123,7 +121,7 @@ fun SettingsPage(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        settingsViewModel.deleteUserProfile(context, userId) { success ->
+                        settingsViewModel.deleteUserProfile(context) { success ->
                             if (success) {
                                 Toast.makeText(context, "Profile deleted successfully.", Toast.LENGTH_SHORT).show()
                             } else {
@@ -173,9 +171,9 @@ fun SettingToggle(titleName: String, settingToggle: Boolean, onToggle: (Boolean)
 }
 
 @Composable
-fun AppVersionDisplay(AppVersion: String) {
+fun AppVersionDisplay(appVersion: String) {
     Text(
-        text = "App Version: $AppVersion",
+        text = "App Version: $appVersion",
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.padding(top = 16.dp)
     )

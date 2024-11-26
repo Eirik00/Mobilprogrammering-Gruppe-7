@@ -2,9 +2,7 @@
 agp = "8.6.1"
 androidMapsUtils = "2.3.0"
 coilNetworkOkhttp = "3.0.0-rc02"
-converterGson = "2.9.0"
 firebaseBom = "33.5.1"
-firebaseFirestoreKtxVersion = "24.5.0"
 googleMapsServices = "2.1.2"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -18,7 +16,6 @@ navigationCompose = "2.8.3"
 playServicesBase = "18.5.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.0.0"
-retrofit = "2.9.0"
 uiTextGoogleFonts = "1.7.4"
 firebaseFirestoreKtx = "25.1.1"
 runtimeLivedata = "1.7.5"
@@ -34,11 +31,9 @@ androidx-navigation-testing = { module = "androidx.navigation:navigation-testing
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigationCompose" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilNetworkOkhttp" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-firestore-ktx-v2450 = { module = "com.google.firebase:firebase-firestore-ktx", version.ref = "firebaseFirestoreKtxVersion" }
 google-maps-services = { module = "com.google.maps:google-maps-services", version.ref = "googleMapsServices" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -58,7 +53,6 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 identity-jvm = { group = "com.android.identity", name = "identity-jvm", version.ref = "identityJvm" }
 

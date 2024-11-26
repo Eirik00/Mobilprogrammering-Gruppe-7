@@ -1,6 +1,5 @@
 package com.gruppe7.wanderly
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +24,6 @@ fun Login(mode: String, authViewModel: AuthViewModel, navController: NavControll
     var username by remember { mutableStateOf("") }
     val usernameMsg = authViewModel.userData.collectAsState().value.username
     val errorMsg = authViewModel.errorMsg.collectAsState().value
-    var result by remember { mutableStateOf(false) }
 
     when (mode) {
         "Log in" -> {

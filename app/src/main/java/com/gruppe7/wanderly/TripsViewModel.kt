@@ -57,7 +57,7 @@ class TripsViewModel : ViewModel() {
             .filter { (key, value) ->
                 key.startsWith("${userId}_") && value is String
             }
-            .map { (key, value) ->
+            .map { (_, value) ->
                 gson.fromJson(value as String, TripObject::class.java)
             }
 

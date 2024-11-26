@@ -19,8 +19,8 @@ android {
         applicationId = "com.gruppe7.wanderly"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 10
+        versionName = "1.0.0"
 
         buildConfigField("String", "API_KEY", "\"${localProperties["apiKey"]}\"")
         manifestPlaceholders["API_KEY"] = localProperties["apiKey"] ?: ""
@@ -114,6 +114,4 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-
-    implementation(libs.firebase.firestore.ktx.v2450)
 }
