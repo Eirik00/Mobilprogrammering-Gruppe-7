@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -47,6 +48,9 @@ import com.gruppe7.wanderly.TripsViewModel
 fun LandingPage(navController: NavController, tripsViewModel: TripsViewModel, userId: String) {
     val scrollState = rememberScrollState()
     val currentTrips = tripsViewModel.savedTrips.collectAsState().value[userId]?.filter { it.started } ?: emptyList()
+
+    tripsViewModel.loadSavedTripsLocally(LocalContext.current, userId)
+
 
     Column(
         modifier = Modifier
