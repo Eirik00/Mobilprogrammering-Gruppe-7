@@ -1,5 +1,6 @@
 package com.gruppe7.wanderly.pages
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.MediaStore
@@ -14,9 +15,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,6 +47,11 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    var description by remember {
+        mutableStateOf(loadProfileDescription(context, userInfo.UUID))
+    }
+    var isEditingDescription by remember { mutableStateOf(false) }
 
     var userPubTrips by remember { mutableStateOf(listOf<TripObject>()) }
 
@@ -124,11 +133,45 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Utforsker. Naturelsker. Alltid klar for et eventyr!",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (isEditingDescription) {
+                    BasicTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        textStyle = TextStyle(
+                            textAlign = TextAlign.Center,
+                            fontSize = 16.sp
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                    )
+                    IconButton(
+                        onClick = {
+                            isEditingDescription = false
+                            saveProfileDescription(context, userInfo.UUID, description)
+                        }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Save Description")
+                    }
+                } else {
+                    Text(
+                        text = description.ifEmpty { "Utforsker. Naturelsker. Alltid klar for et eventyr!" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = { isEditingDescription = true }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Description")
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -228,3 +271,12 @@ fun PublishedTripRow(trip: TripObject, onTripClick: (TripObject) -> Unit) {
     }
 }
 
+fun saveProfileDescription(context: Context, userId: String, description: String) {
+    val sharedPreferences = context.getSharedPreferences("ProfileDescriptions", Context.MODE_PRIVATE)
+    sharedPreferences.edit().putString(userId, description).apply()
+}
+
+fun loadProfileDescription(context: Context, userId: String): String {
+    val sharedPreferences = context.getSharedPreferences("ProfileDescriptions", Context.MODE_PRIVATE)
+    return sharedPreferences.getString(userId, "") ?: ""
+}
