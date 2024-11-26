@@ -1,9 +1,12 @@
 package com.gruppe7.wanderly.pages
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -14,10 +17,10 @@ const val AppVersion = BuildConfig.VERSION_NAME
 
 @Composable
 fun SettingsPage(
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    context: Context,
+    userId: String
 ) {
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -31,28 +34,54 @@ fun SettingsPage(
 
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(8.dp)
         ) {
             // Dark Mode Toggle
-            SettingToggle (titleName = "Dark Mode",
+            SettingToggle(
+                titleName = "Dark Mode",
                 settingToggle = settingsViewModel.isDarkTheme.collectAsState().value,
                 onToggle = {
-                settingsViewModel.toggleDarkTheme()
-            })
+                    settingsViewModel.toggleDarkTheme()
+                }
+            )
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.onSurface,
-                thickness = 2.dp,
+                thickness = 1.dp
             )
-            SettingToggle (titleName = "High Contrast",
+            // High Contrast Toggle
+            SettingToggle(
+                titleName = "High Contrast",
                 settingToggle = settingsViewModel.highContrast.collectAsState().value,
                 onToggle = {
-                settingsViewModel.toggleHighContrast()
-            })
-
+                    settingsViewModel.toggleHighContrast()
+                }
+            )
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp
+            )
+            // Delete All Trips Button
+            Button(
+                onClick = {
+                    settingsViewModel.deleteAllUserTrips(context, userId) { success ->
+                        if (success) {
+                            Toast.makeText(context, "All trips deleted successfully!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Failed to delete trips.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("Delete All My Trips")
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-        
+
+        // App Version Display
         AppVersionDisplay(AppVersion)
     }
 }
@@ -65,13 +94,17 @@ fun SettingToggle(titleName: String, settingToggle: Boolean, onToggle: (Boolean)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = titleName, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        Text(
+            text = titleName,
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.weight(1f)
+        )
         Switch(
             checked = settingToggle,
             onCheckedChange = { onToggle(it) },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                uncheckedThumbColor = MaterialTheme.colorScheme.onSurface
             )
         )
     }

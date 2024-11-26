@@ -7,8 +7,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,7 +19,6 @@ import com.gruppe7.wanderly.pages.LandingPage
 import com.gruppe7.wanderly.pages.MapPage
 import com.gruppe7.wanderly.pages.ProfilePage
 import com.gruppe7.wanderly.pages.SettingsPage
-import com.gruppe7.wanderly.pages.TripPage
 import com.gruppe7.wanderly.pages.tripNavigationGraph
 
 
@@ -61,7 +60,8 @@ class MainActivity : ComponentActivity() {
                                 ProfilePage(authViewModel, tripsViewModel)
                             }
                             composable("settings") {
-                                SettingsPage(settingsViewModel)
+                                val context = LocalContext.current
+                                SettingsPage(settingsViewModel = settingsViewModel, context = context, userId = userId)
                             }
                             composable("home/login/{mode}") { backStackEntry ->
                                 Login(
