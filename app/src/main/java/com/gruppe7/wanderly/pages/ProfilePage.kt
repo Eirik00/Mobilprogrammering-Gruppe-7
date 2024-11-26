@@ -12,11 +12,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Edit
@@ -83,8 +81,7 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (isLoggedIn) {
@@ -186,13 +183,6 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
                     .padding(start = 16.dp, bottom = 8.dp),
                 textAlign = TextAlign.Start
             )
-
-            userPubTrips.forEach { trip ->
-                PublishedTripRow(
-                    trip = trip,
-                    onTripClick = { selectedTrip = trip }
-                )
-            }
         } else {
             // Content for guest users
             Text(
@@ -210,43 +200,43 @@ fun ProfilePage(authViewModel: AuthViewModel, tripsViewModel: TripsViewModel, na
         }
 
         // Trip Dialog
-        selectedTrip?.let { trip ->
-            TripDialog(
+        userPubTrips.forEach { trip ->
+            PublishedTripRow(
                 trip = trip,
-                onDismiss = { selectedTrip = null },
-                onSaveOrDelete = {
-                    coroutineScope.launch {
-                        if (trip.savedLocally) {
-                            tripsViewModel.deleteTripLocally(context, userInfo.UUID, trip.id)
-                        } else {
-                            tripsViewModel.saveTripLocally(context, userInfo.UUID, trip)
-                        }
-                        selectedTrip = null
-                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
-                    }
-                },
-                onDeleteFromFirebase = {
-                    coroutineScope.launch {
-                        if (trip.ownerID == userInfo.UUID) {
-                            tripsViewModel.deleteTripFromFirebase(context, userInfo.UUID, trip.id)
-                            Toast.makeText(
-                                context,
-                                "Trip deleted from Firebase",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "You are not the owner of this trip",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                },
-                showDeleteButton = true
+                onTripClick = { selectedTrip = trip }
             )
         }
+    }
+
+    // Trip Dialog
+    selectedTrip?.let { trip ->
+        TripDialog(
+            trip = trip,
+            onDismiss = { selectedTrip = null },
+            onSaveOrDelete = {
+                coroutineScope.launch {
+                    if (trip.savedLocally) {
+                        tripsViewModel.deleteTripLocally(context, userInfo.UUID, trip.id)
+                    } else {
+                        tripsViewModel.saveTripLocally(context, userInfo.UUID, trip)
+                    }
+                    selectedTrip = null
+                    userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                }
+            },
+            onDeleteFromFirebase = {
+                coroutineScope.launch {
+                    if (trip.ownerID == userInfo.UUID) {
+                        tripsViewModel.deleteTripFromFirebase(context, userInfo.UUID, trip.id)
+                        Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
+                        userPubTrips = tripsViewModel.fetchTripsByUser(userInfo.UUID)
+                    } else {
+                        Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            showDeleteButton = true
+        )
     }
 }
 
