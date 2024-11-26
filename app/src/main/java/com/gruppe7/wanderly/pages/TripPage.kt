@@ -4,6 +4,7 @@ import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.*
@@ -126,6 +127,9 @@ fun TripPage(
                     tripsViewModel.saveTripLocally(context, userId, trip)
                 }
                 selectedTrip = null
+            },
+            startOrStopTrip = {
+                tripsViewModel.startOrStopTrip(context, trip, userId)
             }
         )
     }
@@ -217,9 +221,12 @@ private fun SavedTripsSection(
 fun TripDialog(
     trip: TripObject,
     onSaveOrDelete: () -> Unit,
+    startOrStopTrip: (() -> Unit)? = null,
     onDismiss: () -> Unit) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
+    var isStarted by remember { mutableStateOf(trip.started) }
+
 
     var startAddress by remember { mutableStateOf("Loading...") }
     var endAddress by remember { mutableStateOf("Loading...") }
@@ -291,6 +298,24 @@ fun TripDialog(
                     Log.d("TripDialog", "Save/Delete Trip Clicked!")
                 }) {
                     Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
+                }
+                if (startOrStopTrip != null) {
+                    if (trip.savedLocally) {
+                        Button(onClick = {
+                                startOrStopTrip.invoke()
+                                isStarted = trip.started
+
+                            val message = if(trip.started){
+                                "Trip started: ${trip.name}"
+                            }else{
+                                "Trip stopped: ${trip.name}"
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+                        }) {
+                            Text(if (isStarted) "Stop Trip" else "Start Trip")
+                        }
+                    }
                 }
                 TextButton(onClick = onDismiss) {
                     Text("Close")

@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,14 +37,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.compose.AppTheme
 import com.gruppe7.wanderly.MainLayout
+import com.gruppe7.wanderly.TripsViewModel
 
 
 @Composable
-fun LandingPage() {
-
+fun LandingPage(navController: NavController, tripsViewModel: TripsViewModel, userId: String) {
     val scrollState = rememberScrollState()
+    val currentTrips = tripsViewModel.savedTrips.collectAsState().value[userId]?.filter { it.started } ?: emptyList()
+
     Column(
         modifier = Modifier
             .verticalScroll(scrollState)
@@ -86,10 +92,18 @@ fun LandingPage() {
                         textDecoration = TextDecoration.Underline,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    currentTrips.forEach { trip ->
+                        TripCard(
+                            trip = trip,
+                            onClick = { Log.d("STATE", "trip clicked ${trip.name}") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     Button(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally),
-                        onClick = { Log.d("State", "Popular Trips Clicked!") },
+                        onClick = { navController.navigate("trips") },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary,
                         ),

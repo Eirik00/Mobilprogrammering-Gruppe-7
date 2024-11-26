@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding)
                         ){
                             composable("home") {
-                                LandingPage()
+                                LandingPage(navController, tripsViewModel, userId)
                             }
                             tripNavigationGraph(navController, tripsViewModel, userId)
                             composable("map") {
@@ -66,7 +66,8 @@ class MainActivity : ComponentActivity() {
                             composable("home/login/{mode}") { backStackEntry ->
                                 Login(
                                     mode = backStackEntry.arguments?.getString("mode") ?: "none",
-                                    authViewModel = authViewModel
+                                    authViewModel = authViewModel,
+                                    navController = navController
                                 )
                             }
                         }

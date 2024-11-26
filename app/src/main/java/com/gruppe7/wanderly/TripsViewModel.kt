@@ -28,7 +28,7 @@ data class TripObject(
     val clickCounter: Int = 0,
     val ownerID: String = "",
     var savedLocally: Boolean = false,
-    val started: Boolean = false,
+    var started: Boolean = false,
 )
 
 sealed class TripsFetchState {
@@ -80,6 +80,14 @@ class TripsViewModel : ViewModel() {
         editor.remove("${userId}_$tripId")
         editor.apply()
         loadSavedTripsLocally(context, userId)
+    }
+
+    fun startOrStopTrip(context: Context, trip: TripObject, userId: String): Boolean {
+        trip.started = !trip.started
+        saveTripLocally(context = context, userId, trip)
+        loadSavedTripsLocally(context, userId)
+
+        return trip.started
     }
 
     init {

@@ -12,15 +12,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.navigation.NavController
 
 
 @Composable
-fun Login(mode: String,authViewModel: AuthViewModel){
+fun Login(mode: String,authViewModel: AuthViewModel, navController: NavController){
     val context = LocalContext.current
     var email by remember{ mutableStateOf("") }
     var password by remember{ mutableStateOf("") }
     var username by remember { mutableStateOf("") }
-    var shouldNavigateBack by remember { mutableStateOf(false) }
 
     when(mode){
         "Log in" -> {
@@ -42,7 +42,10 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                 )
                 Row{
                     Button(
-                        onClick = { authViewModel.login(context, email, password)}
+                        onClick = {
+                            authViewModel.login(context, email, password)
+                            navController.navigate("home")
+                        }
                     ) {
                         Text("Login")
                     }
@@ -76,7 +79,10 @@ fun Login(mode: String,authViewModel: AuthViewModel){
                 )
                 Row{
                     Button(
-                        onClick = { authViewModel.register(context, username, email, password) }
+                        onClick = {
+                            authViewModel.register(context, username, email, password)
+                            navController.navigate("home")
+                        }
                     ) {
                         Text("Register")
                     }
