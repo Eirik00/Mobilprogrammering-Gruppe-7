@@ -159,20 +159,6 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
-                value = waypoints.joinToString(", ") { "${it.latitude},${it.longitude}" },
-                onValueChange = { input ->
-                    waypoints = input.split(", ").map {
-                        val parts = it.split(",")
-                        LatLng(parts[0].toDouble(), parts[1].toDouble())
-                    }.toMutableList()
-                },
-                label = { Text("Waypoints (format: lat,lng)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            TextField(
                 value = images.joinToString(", "),
                 onValueChange = { input ->
                     images = input.split(", ").toMutableList()

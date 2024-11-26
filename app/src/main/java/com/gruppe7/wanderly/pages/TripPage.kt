@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
@@ -244,9 +247,9 @@ fun TripDialog(
 ) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
+    val  scrollState = rememberScrollState()
+
     var isStarted by remember { mutableStateOf(trip.started) }
-
-
     var startAddress by remember { mutableStateOf("Loading...") }
     var endAddress by remember { mutableStateOf("Loading...") }
 
@@ -268,6 +271,7 @@ fun TripDialog(
 
     Card(
         modifier = Modifier
+            .verticalScroll(scrollState)
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(12.dp),
@@ -365,11 +369,17 @@ fun TripCard(
     onClick: () -> Unit,
 ) {
     val locations = rememberLocationAddresses(trip)
+    val db = FirebaseFirestore.getInstance()
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = {
+                onClick()
+                db.collection("trips")
+                    .document(trip.id)
+                    .update("clickCounter", com.google.firebase.firestore.FieldValue.increment(1))
+            }),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
