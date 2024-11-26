@@ -85,7 +85,16 @@ fun SearchPage(tripsViewModel: TripsViewModel, searchText: String, onBack: () ->
                         tripsViewModel.saveTripLocally(context, userId, trip)
                         Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                     }
-                }
+                },
+                onDeleteFromFirebase =  {
+                    if (trip.ownerID == userId) {
+                        tripsViewModel.deleteTripFromFirebase(context, userId, trip.id)
+                        Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                showDeleteButton = false
             )
         }
     }

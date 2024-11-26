@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.gruppe7.wanderly.TripObject
 import com.gruppe7.wanderly.TripsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +29,7 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     val context = LocalContext.current
     val allTrips by tripsViewModel.trips.collectAsState(initial = emptyList())
     var selectedTrip by remember { mutableStateOf<TripObject?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     Log.d("FindMoreTripsPage", "User ID: $userId")
@@ -82,7 +84,16 @@ fun FindMoreTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                     tripsViewModel.saveTripLocally(context, userId, trip)
                     Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                 }
-            }
+            },
+            onDeleteFromFirebase =  {
+                if (trip.ownerID == userId) {
+                    tripsViewModel.deleteTripFromFirebase(context,userId, trip.id)
+                    Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
+                }
+            },
+            showDeleteButton = false
         )
     }
 }

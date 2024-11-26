@@ -128,9 +128,14 @@ fun TripPage(
                 }
                 selectedTrip = null
             },
+            onDeleteFromFirebase = {
+                tripsViewModel.deleteTripFromFirebase(context, userId, trip.id)
+                selectedTrip = null
+            },
             startOrStopTrip = {
                 tripsViewModel.startOrStopTrip(context, trip, userId)
-            }
+            },
+            showDeleteButton = false
         )
     }
 }
@@ -222,7 +227,11 @@ fun TripDialog(
     trip: TripObject,
     onSaveOrDelete: () -> Unit,
     startOrStopTrip: (() -> Unit)? = null,
-    onDismiss: () -> Unit) {
+    onDismiss: () -> Unit,
+    onDeleteFromFirebase: () -> Unit,
+    showDeleteButton: Boolean
+
+) {
     val context = LocalContext.current
     val geocoder = Geocoder(context, Locale.getDefault())
     var isStarted by remember { mutableStateOf(trip.started) }
@@ -299,6 +308,16 @@ fun TripDialog(
                 }) {
                     Text(if (trip.savedLocally) "Delete Trip" else "Save Trip")
                 }
+
+                if (showDeleteButton) {
+                    Button(onClick = {
+                        onDeleteFromFirebase()
+                        Log.d("TripDialog", "Delete Trip from Firebase Clicked!")
+                    }) {
+                        Text("Delete from Firebase")
+                    }
+                }
+
                 if (startOrStopTrip != null) {
                     if (trip.savedLocally) {
                         Button(onClick = {

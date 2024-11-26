@@ -212,23 +212,24 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
 
             Button(
                 onClick = {
-                    val startLat = tripStartLatitude.toDouble()
-                    val startLng = tripStartLongitude.toDouble()
-                    val endLat = tripEndLatitude.toDouble()
-                    val endLng = tripEndLongitude.toDouble()
+                    val startLat = tripStartLatitude.toDoubleOrNull()
+                    val startLng = tripStartLongitude.toDoubleOrNull()
+                    val endLat = tripEndLatitude.toDoubleOrNull()
+                    val endLng = tripEndLongitude.toDoubleOrNull()
 
                     val waypointGeoPoints = waypoints.mapNotNull { waypoint ->
                         val parts = waypoint.split(",")
                         if (parts.size == 2) {
-                            val lat = parts[0].toDouble()
-                            val lng = parts[1].toDouble()
-                            GeoPoint(lat, lng)
+                            val lat = parts[0].toDoubleOrNull()
+                            val lng = parts[1].toDoubleOrNull()
+                            if (lat != null && lng != null) GeoPoint(lat, lng) else null
                         } else {
                             null
                         }
                     }
 
-                    if (lengthInKm != null && tripDurationInMinutes != null) {
+                    if (startLat != null && startLng != null && endLat != null && endLng != null &&
+                        lengthInKm != null && tripDurationInMinutes != null) {
                         coroutineScope.launch {
                             tripsViewModel.createTrip(TripObject(
                                 id = UUID.randomUUID().toString(),
@@ -244,6 +245,8 @@ fun CreateTripPage(tripsViewModel: TripsViewModel, onBack: () -> Unit, userId: S
                                 images = images,
                                 transportationMode = selectedMode.displayName
                             ))
+                            Toast.makeText(context, "Trip saved successfully!", Toast.LENGTH_SHORT).show()
+                            onBack()
                         }
                     } else {
                         Toast.makeText(context, "Please enter valid data", Toast.LENGTH_SHORT).show()

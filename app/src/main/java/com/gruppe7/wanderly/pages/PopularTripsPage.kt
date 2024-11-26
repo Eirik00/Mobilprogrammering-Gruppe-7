@@ -98,6 +98,7 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
     selectedTrip?.let { trip ->
         TripDialog(
             trip = trip,
+            onDismiss = { selectedTrip = null },
             onSaveOrDelete = {
                 if(trip.savedLocally) {
                     tripsViewModel.deleteTripLocally(context, userId, trip.id)
@@ -107,10 +108,19 @@ fun PopularTripsPage(tripsViewModel: TripsViewModel, onBack: () -> Unit) {
                     Toast.makeText(context, "Trip saved", Toast.LENGTH_SHORT).show()
                 }
             },
-            onDismiss = { selectedTrip = null }
+            onDeleteFromFirebase =  {
+                if (trip.ownerID == userId) {
+                    tripsViewModel.deleteTripFromFirebase(context, userId, trip.id)
+                    Toast.makeText(context, "Trip deleted from Firebase", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "You are not the owner of this trip", Toast.LENGTH_SHORT).show()
+                }
+            },
+            showDeleteButton = false
         )
     }
 }
+
 
     suspend fun getClickCounterFromFirestore(tripId: String): Int {
     val db = FirebaseFirestore.getInstance()
